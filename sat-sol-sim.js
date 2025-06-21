@@ -7,12 +7,25 @@
  * @license MIT
  */
 
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // Node.js/CommonJS
+        module.exports = factory();
+    } else {
+        // Browser globals
+        root.SolarSystemAPI = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+
 /**
  * Global Solar System API
  * Provides comprehensive control over the 3D solar system simulation
  * All methods are chainable for fluid programming experience
  */
-window.SolarSystemAPI = {
+const SolarSystemAPI = {
     // Core simulation controls
     simulation: {
         /**
@@ -227,29 +240,120 @@ window.SolarSystemAPI = {
         }
     },
     
-    // Satellite management
-    satellites: {
+    // Celestial body controls
+    celestialBodies: {
         /**
-         * Get all satellites information
-         * @returns {Array} Array of satellite objects
+         * Get sun object and properties
+         * @returns {Object} Sun data
          */
-        getAll: function() {
-            if (typeof satellites !== 'undefined') {
-                return satellites.map(sat => ({
-                    id: sat.userData.id,
-                    type: sat.userData.type,
-                    status: sat.userData.status,
-                    health: sat.userData.health,
-                    position: sat.position,
-                    class: sat.userData.class
+        getSun: function() {
+            if (typeof sun !== 'undefined') {
+                return {
+                    position: sun.position,
+                    scale: sun.scale,
+                    visible: sun.visible
+                };
+            }
+            return null;
+        },
+        
+        /**
+         * Get Earth object and properties
+         * @returns {Object} Earth data
+         */
+        getEarth: function() {
+            if (typeof earth !== 'undefined') {
+                return {
+                    position: earth.position,
+                    rotation: earth.rotation,
+                    orbitAngle: typeof earthOrbitAngle !== 'undefined' ? earthOrbitAngle : 0
+                };
+            }
+            return null;
+        },
+        
+        /**
+         * Get Moon object and properties
+         * @returns {Object} Moon data
+         */
+        getMoon: function() {
+            if (typeof moon !== 'undefined') {
+                return {
+                    position: moon.position,
+                    rotation: moon.rotation,
+                    orbitAngle: typeof moonOrbitAngle !== 'undefined' ? moonOrbitAngle : 0
+                };
+            }
+            return null;
+        },
+        
+        /**
+         * Get specific planet data
+         * @param {string} name - Planet name
+         * @returns {Object} Planet data
+         */
+        getPlanet: function(name) {
+            if (typeof planets !== 'undefined' && planets[name]) {
+                return {
+                    position: planets[name].position,
+                    rotation: planets[name].rotation,
+                    name: name
+                };
+            }
+            return null;
+        },
+        
+        /**
+         * Get all planets
+         * @returns {Array} Array of all planet objects
+         */
+        getAllPlanets: function() {
+            if (typeof planets !== 'undefined') {
+                return Object.keys(planets).map(name => ({
+                    name: name,
+                    position: planets[name].position,
+                    rotation: planets[name].rotation
                 }));
             }
             return [];
         },
         
         /**
-         * Get satellites by specific type
-         * @param {string} type - Satellite type (LEO_COMM, LEO_WEATHER, etc.)
+         * Set planet position by orbital angle
+         * @param {string} name - Planet name
+         * @param {number} angle - Orbital angle in radians
+         * @returns {Object} this - for method chaining
+         */
+        setPlanetPosition: function(name, angle) {
+            if (typeof planets !== 'undefined' && planets[name] && typeof planetData !== 'undefined' && planetData[name]) {
+                const distance = planetData[name].distance;
+                planets[name].position.x = Math.cos(angle) * distance;
+                planets[name].position.z = Math.sin(angle) * distance;
+            }
+            return this;
+        }
+    },
+    
+    // Satellite management
+    satellites: {
+        /**
+         * Get all satellites with their current status
+         * @returns {Array} Array of satellite objects
+         */
+        getAll: function() {
+            if (typeof satellites !== 'undefined') {
+                return satellites.map(sat => ({
+                    position: sat.position,
+                    type: sat.userData ? sat.userData.type : 'unknown',
+                    status: sat.userData ? sat.userData.status : 'operational'
+                }));
+            }
+            return [];
+        },
+        
+        /**
+         * Get satellites of a specific type
+         * @param {string} type - Satellite type (LEO_COMM, LEO_WEATHER, MEO_NAV, GEO_COMM, MILITARY)
          * @returns {Array} Array of matching satellites
          */
         getByType: function(type) {
@@ -273,24 +377,24 @@ window.SolarSystemAPI = {
         },
         
         /**
-         * Trigger random satellite failure
+         * Trigger a random satellite failure
          * @returns {Object} this - for method chaining
          */
         failRandom: function() {
-            if (typeof randomFailure === 'function') {
-                randomFailure();
+            if (typeof failRandomSatellite === 'function') {
+                failRandomSatellite();
             }
             return this;
         },
         
         /**
-         * Highlight satellites of specific type
+         * Highlight satellites of a specific type
          * @param {string} type - Satellite type to highlight
          * @returns {Object} this - for method chaining
          */
         highlight: function(type) {
-            if (typeof highlightSatelliteClass === 'function') {
-                highlightSatelliteClass(type);
+            if (typeof highlightSatelliteType === 'function') {
+                highlightSatelliteType(type);
             }
             return this;
         },
@@ -353,22 +457,22 @@ window.SolarSystemAPI = {
     // Visual controls
     visuals: {
         /**
-         * Show orbital rings
+         * Show orbital ring indicators
          * @returns {Object} this - for method chaining
          */
         showOrbits: function() {
-            if (typeof toggleOrbits === 'function' && typeof showOrbits !== 'undefined' && !showOrbits) {
+            if (typeof showOrbits !== 'undefined' && !showOrbits && typeof toggleOrbits === 'function') {
                 toggleOrbits();
             }
             return this;
         },
         
         /**
-         * Hide orbital rings
+         * Hide orbital ring indicators
          * @returns {Object} this - for method chaining
          */
         hideOrbits: function() {
-            if (typeof toggleOrbits === 'function' && typeof showOrbits !== 'undefined' && showOrbits) {
+            if (typeof showOrbits !== 'undefined' && showOrbits && typeof toggleOrbits === 'function') {
                 toggleOrbits();
             }
             return this;
@@ -379,7 +483,7 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         showTrails: function() {
-            if (typeof toggleTrails === 'function' && typeof showTrails !== 'undefined' && !showTrails) {
+            if (typeof showTrails !== 'undefined' && !showTrails && typeof toggleTrails === 'function') {
                 toggleTrails();
             }
             return this;
@@ -390,7 +494,7 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         hideTrails: function() {
-            if (typeof toggleTrails === 'function' && typeof showTrails !== 'undefined' && showTrails) {
+            if (typeof showTrails !== 'undefined' && showTrails && typeof toggleTrails === 'function') {
                 toggleTrails();
             }
             return this;
@@ -401,7 +505,7 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         enableNegativeMode: function() {
-            if (typeof toggleNegativeLighting === 'function' && typeof negativeLighting !== 'undefined' && !negativeLighting) {
+            if (typeof negativeLighting !== 'undefined' && !negativeLighting && typeof toggleNegativeLighting === 'function') {
                 toggleNegativeLighting();
             }
             return this;
@@ -412,7 +516,7 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         disableNegativeMode: function() {
-            if (typeof toggleNegativeLighting === 'function' && typeof negativeLighting !== 'undefined' && negativeLighting) {
+            if (typeof negativeLighting !== 'undefined' && negativeLighting && typeof toggleNegativeLighting === 'function') {
                 toggleNegativeLighting();
             }
             return this;
@@ -423,8 +527,8 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         showUI: function() {
-            if (typeof toggleUI === 'function' && typeof uiVisible !== 'undefined' && !uiVisible) {
-                toggleUI();
+            if (typeof interfaceHidden !== 'undefined' && interfaceHidden && typeof toggleInterface === 'function') {
+                toggleInterface();
             }
             return this;
         },
@@ -434,8 +538,8 @@ window.SolarSystemAPI = {
          * @returns {Object} this - for method chaining
          */
         hideUI: function() {
-            if (typeof toggleUI === 'function' && typeof uiVisible !== 'undefined' && uiVisible) {
-                toggleUI();
+            if (typeof interfaceHidden !== 'undefined' && !interfaceHidden && typeof toggleInterface === 'function') {
+                toggleInterface();
             }
             return this;
         },
@@ -449,12 +553,12 @@ window.SolarSystemAPI = {
                 orbits: typeof showOrbits !== 'undefined' ? showOrbits : true,
                 trails: typeof showTrails !== 'undefined' ? showTrails : false,
                 negative: typeof negativeLighting !== 'undefined' ? negativeLighting : false,
-                ui: typeof uiVisible !== 'undefined' ? uiVisible : true
+                ui: typeof interfaceHidden !== 'undefined' ? !interfaceHidden : true
             };
         }
     },
     
-    // Event system
+    // Event system for custom interactions
     events: {
         callbacks: {},
         
@@ -652,21 +756,31 @@ Try: SolarSystemAPI.utils.getSystemInfo()
     }
 };
 
-// Auto-initialize when window loads
+// Helper function to update UI elements (referenced by API)
+function updateUI() {
+    if (typeof document !== 'undefined') {
+        const pauseBtn = document.querySelector('button[onclick="togglePause()"]');
+        if (pauseBtn && typeof paused !== 'undefined') {
+            pauseBtn.textContent = paused ? '▶️ RESUME' : '⏸️ PAUSE';
+        }
+    }
+}
+
+// Auto-initialize when window loads (browser only)
 if (typeof window !== 'undefined') {
+    // Assign to window for backward compatibility
+    window.SolarSystemAPI = SolarSystemAPI;
+    
     window.addEventListener('load', function() {
         setTimeout(() => {
-            if (window.SolarSystemAPI && window.SolarSystemAPI._initialize) {
-                window.SolarSystemAPI._initialize();
+            if (SolarSystemAPI && SolarSystemAPI._initialize) {
+                SolarSystemAPI._initialize();
             }
         }, 200);
     });
 }
 
-// Helper function to update UI elements (referenced by API)
-function updateUI() {
-    const pauseBtn = document.querySelector('button[onclick="togglePause()"]');
-    if (pauseBtn && typeof paused !== 'undefined') {
-        pauseBtn.textContent = paused ? '▶️ RESUME' : '⏸️ PAUSE';
-    }
-}
+// Return the API for module systems
+return SolarSystemAPI;
+
+}));

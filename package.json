@@ -1,0 +1,65 @@
+{
+  "name": "sat-sol-sim",
+  "version": "1.0.0",
+  "description": "A stunning, interactive 3D solar system simulation featuring realistic planetary motion, satellite constellations, and comprehensive programmatic control through a powerful JavaScript API",
+  "main": "sat-sol-sim.js",
+  "module": "sat-sol-sim.js",
+  "browser": "sat-sol-sim.js",
+  "unpkg": "sat-sol-sim.min.js",
+  "jsdelivr": "sat-sol-sim.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"Build process not yet implemented\"",
+    "prepublishOnly": "echo \"Running pre-publish checks...\""
+  },
+  "keywords": [
+    "satellite",
+    "solar-system",
+    "simulation", 
+    "3d",
+    "astronomy",
+    "space",
+    "webgl",
+    "threejs",
+    "visualization",
+    "interactive",
+    "planetary",
+    "constellation",
+    "api",
+    "javascript",
+    "browser"
+  ],
+  "author": "David Olsson",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/worksona/sat-sol-sim.git"
+  },
+  "homepage": "https://github.com/worksona/sat-sol-sim#readme",
+  "bugs": {
+    "url": "https://github.com/worksona/sat-sol-sim/issues"
+  },
+  "files": [
+    "sat-sol-sim.js",
+    "sat-sol-sim.min.js",
+    "sats.csv",
+    "earth-texture.jpg",
+    "README.md",
+    "API_DOCUMENTATION.md",
+    "index.d.ts"
+  ],
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "peerDependencies": {
+    "three": ">=0.128.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.155.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+} 
