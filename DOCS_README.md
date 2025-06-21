@@ -1,6 +1,6 @@
-# 📚 Solar System API Documentation Suite
+# 📚 sat-sol-sim API Documentation Suite
 
-Complete documentation and resources for the Solar System API v1.0.0.
+Complete documentation and resources for the sat-sol-sim API v1.0.0.
 
 ## 📋 Documentation Files
 
@@ -159,4 +159,4 @@ Documentation is optimized for:
 
 ---
 
-**🚀 Ready to control the cosmos?** Start with the [HTML documentation](api-documentation.html) and let the Solar System API guide your space exploration! 🌌 
+**🚀 Ready to control the cosmos?** Start with the [HTML documentation](api-documentation.html) and let the sat-sol-sim API guide your space exploration! 🌌 

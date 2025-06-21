@@ -3,11 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sat-Sol-Sim | Solar System Satellite Simulation API</title>
-    <meta name="description" content="Professional 3D solar system simulation with comprehensive API for satellite constellation analysis, orbital mechanics visualization, and space education.">
+    <title>sat-sol-sim | Satellite and Solar System Simulator API</title>
+    <meta name="description" content="Professional 3D satellite and solar system simulator with comprehensive API for satellite constellation analysis, orbital mechanics visualization, and space education.">
     <meta name="keywords" content="satellite simulation, solar system API, orbital mechanics, space visualization, 3D astronomy, satellite constellation">
     
     <style>
+        :root {
+            /* Default Classic Theme Variables */
+            --primary-bg: #001122;
+            --secondary-bg: rgba(0, 17, 34, 0.95);
+            --tertiary-bg: rgba(0, 0, 0, 0.8);
+            --primary-text: #00ff00;
+            --secondary-text: #00ff88;
+            --accent-text: #00ccff;
+            --border-color: #00ff00;
+            --hover-bg: rgba(0, 255, 0, 0.1);
+            --panel-bg: rgba(0, 17, 34, 0.9);
+            --button-bg: #003300;
+            --button-hover: #004400;
+            --button-active: #006600;
+            --input-bg: #003300;
+            --shadow-color: rgba(0, 255, 0, 0.3);
+            --gradient-start: rgba(0, 17, 34, 0.9);
+            --gradient-end: rgba(0, 34, 68, 0.7);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,10 +36,11 @@
         
         body {
             font-family: 'Courier New', monospace;
-            background: #001122;
-            color: #00ff00;
+            background: var(--primary-bg);
+            color: var(--primary-text);
             line-height: 1.6;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .container {
@@ -46,14 +67,15 @@
         }
         
         header {
-            background: rgba(0, 17, 34, 0.95);
+            background: var(--secondary-bg);
             backdrop-filter: blur(10px);
             position: fixed;
             top: 0;
             width: 100%;
             z-index: 1000;
             padding: 1rem 0;
-            border-bottom: 1px solid #00ff00;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
         
         nav {
@@ -65,9 +87,10 @@
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #00ff88;
+            color: var(--secondary-text);
             text-decoration: none;
-            text-shadow: 0 0 10px #00ff88;
+            text-shadow: 0 0 10px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .nav-links {
@@ -77,7 +100,7 @@
         }
         
         .nav-links a {
-            color: #00ff00;
+            color: var(--primary-text);
             text-decoration: none;
             transition: all 0.3s;
             padding: 0.5rem 1rem;
@@ -85,8 +108,8 @@
         }
         
         .nav-links a:hover {
-            background: rgba(0, 255, 0, 0.1);
-            text-shadow: 0 0 5px #00ff00;
+            background: var(--hover-bg);
+            text-shadow: 0 0 5px var(--primary-text);
         }
         
         .hero {
@@ -94,7 +117,8 @@
             display: flex;
             align-items: center;
             padding-top: 80px;
-            background: linear-gradient(135deg, rgba(0, 17, 34, 0.9) 0%, rgba(0, 34, 68, 0.7) 100%);
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            transition: background 0.3s ease;
         }
         
         .hero-content {
@@ -107,23 +131,26 @@
         .hero-text h1 {
             font-size: 3rem;
             margin-bottom: 1rem;
-            color: #00ff88;
-            text-shadow: 0 0 20px #00ff88;
+            color: var(--secondary-text);
+            text-shadow: 0 0 20px var(--secondary-text);
             line-height: 1.2;
+            transition: all 0.3s ease;
         }
         
         .hero-text .subtitle {
             font-size: 1.2rem;
-            color: #00ccff;
+            color: var(--accent-text);
             margin-bottom: 2rem;
             opacity: 0.9;
+            transition: color 0.3s ease;
         }
         
         .hero-text .description {
             font-size: 1rem;
             margin-bottom: 2rem;
-            color: #00ff00;
+            color: var(--primary-text);
             opacity: 0.8;
+            transition: color 0.3s ease;
         }
         
         .cta-buttons {
@@ -145,30 +172,31 @@
         }
         
         .btn-primary {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
-            color: #00ff88;
+            background: rgba(var(--secondary-text-rgb, 0, 255, 136), 0.2);
+            border-color: var(--secondary-text);
+            color: var(--secondary-text);
         }
         
         .btn-secondary {
-            background: rgba(0, 204, 255, 0.2);
-            border-color: #00ccff;
-            color: #00ccff;
+            background: rgba(var(--accent-text-rgb, 0, 204, 255), 0.2);
+            border-color: var(--accent-text);
+            color: var(--accent-text);
         }
         
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 0 20px currentColor;
-            background: rgba(0, 255, 0, 0.1);
+            background: var(--hover-bg);
         }
         
         .hero-terminal {
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00ff00;
+            background: var(--tertiary-bg);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
             font-family: 'Courier New', monospace;
             position: relative;
+            transition: all 0.3s ease;
         }
         
         .terminal-header {
@@ -176,7 +204,8 @@
             align-items: center;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #00ff00;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
         }
         
         .terminal-dots {
@@ -196,46 +225,54 @@
         .dot.green { background: #50fa7b; }
         
         .terminal-title {
-            color: #00ff00;
+            color: var(--primary-text);
             font-size: 0.9rem;
+            transition: color 0.3s ease;
         }
         
         .terminal-content {
-            color: #00ff00;
+            color: var(--primary-text);
             font-size: 0.9rem;
             line-height: 1.4;
+            transition: color 0.3s ease;
         }
         
         .terminal-prompt {
-            color: #00ccff;
+            color: var(--accent-text);
+            transition: color 0.3s ease;
         }
         
         .terminal-command {
-            color: #00ff88;
+            color: var(--secondary-text);
+            transition: color 0.3s ease;
         }
         
         .terminal-comment {
             color: #888;
+            transition: color 0.3s ease;
         }
         
         .section {
             padding: 80px 0;
-            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
         }
         
         .section h2 {
             font-size: 2.5rem;
             margin-bottom: 3rem;
-            color: #00ff88;
+            color: var(--secondary-text);
             text-align: center;
-            text-shadow: 0 0 10px #00ff88;
+            text-shadow: 0 0 10px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .section h3 {
             font-size: 1.5rem;
             margin-bottom: 1rem;
-            color: #00ccff;
-            text-shadow: 0 0 5px #00ccff;
+            color: var(--accent-text);
+            text-shadow: 0 0 5px var(--accent-text);
+            transition: all 0.3s ease;
         }
         
         .features-grid {
@@ -246,16 +283,16 @@
         }
         
         .feature-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #00ff00;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 2rem;
             transition: all 0.3s;
         }
         
         .feature-card:hover {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            border-color: var(--secondary-text);
+            box-shadow: 0 0 20px var(--shadow-color);
             transform: translateY(-5px);
         }
         
@@ -263,11 +300,13 @@
             font-size: 2rem;
             margin-bottom: 1rem;
             display: block;
-            color: #00ff88;
+            color: var(--secondary-text);
+            transition: color 0.3s ease;
         }
         
         .api-section {
-            background: rgba(0, 0, 0, 0.4);
+            background: var(--tertiary-bg);
+            transition: background 0.3s ease;
         }
         
         .api-grid {
@@ -278,18 +317,20 @@
         }
         
         .api-module {
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #00ff00;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
             position: relative;
+            transition: all 0.3s ease;
         }
         
         .api-module h4 {
-            color: #00ff88;
+            color: var(--secondary-text);
             font-size: 1.2rem;
             margin-bottom: 1rem;
-            text-shadow: 0 0 5px #00ff88;
+            text-shadow: 0 0 5px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .api-methods {
@@ -299,38 +340,44 @@
         
         .api-methods li {
             padding: 0.3rem 0;
-            border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
         }
         
         .method-name {
-            color: #00ccff;
+            color: var(--accent-text);
             font-weight: bold;
+            transition: color 0.3s ease;
         }
         
         .method-desc {
-            color: #00ff00;
+            color: var(--primary-text);
             opacity: 0.8;
             font-size: 0.9rem;
+            transition: color 0.3s ease;
         }
         
         .code-block {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #00ff00;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 1rem;
             margin: 1rem 0;
             overflow-x: auto;
             font-family: 'Courier New', monospace;
             font-size: 0.9rem;
+            transition: all 0.3s ease;
         }
         
         .code-block pre {
             margin: 0;
-            color: #00ff00;
+            color: var(--primary-text);
+            transition: color 0.3s ease;
         }
         
         .demo-section {
-            background: rgba(0, 17, 34, 0.3);
+            background: var(--tertiary-bg);
+            transition: background 0.3s ease;
         }
         
         .demo-grid {
@@ -341,8 +388,8 @@
         }
         
         .demo-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #00ccff;
+            background: var(--panel-bg);
+            border: 2px solid var(--accent-text);
             border-radius: 8px;
             padding: 2rem;
             text-align: center;
@@ -350,20 +397,23 @@
         }
         
         .demo-card:hover {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
+            border-color: var(--secondary-text);
+            box-shadow: 0 0 20px var(--shadow-color);
             transform: translateY(-5px);
         }
         
         .demo-card h4 {
-            color: #00ccff;
+            color: var(--accent-text);
             margin-bottom: 1rem;
             font-size: 1.3rem;
+            transition: color 0.3s ease;
         }
         
         .demo-card p {
             margin-bottom: 1.5rem;
             opacity: 0.8;
+            color: var(--primary-text);
+            transition: color 0.3s ease;
         }
         
         .demo-card .btn {
@@ -381,29 +431,33 @@
         .stat {
             text-align: center;
             padding: 2rem;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #00ff00;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            transition: all 0.3s ease;
         }
         
         .stat-number {
             font-size: 3rem;
             font-weight: bold;
-            color: #00ff88;
+            color: var(--secondary-text);
             display: block;
-            text-shadow: 0 0 10px #00ff88;
+            text-shadow: 0 0 10px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .stat-label {
-            color: #00ccff;
+            color: var(--accent-text);
             margin-top: 0.5rem;
+            transition: color 0.3s ease;
         }
         
         footer {
-            background: rgba(0, 0, 0, 0.9);
-            border-top: 2px solid #00ff00;
+            background: var(--panel-bg);
+            border-top: 2px solid var(--border-color);
             padding: 3rem 0;
             text-align: center;
+            transition: all 0.3s ease;
         }
         
         .footer-links {
@@ -415,7 +469,7 @@
         }
         
         .footer-links a {
-            color: #00ccff;
+            color: var(--accent-text);
             text-decoration: none;
             transition: all 0.3s;
             padding: 0.5rem 1rem;
@@ -423,8 +477,8 @@
         }
         
         .footer-links a:hover {
-            background: rgba(0, 255, 0, 0.1);
-            text-shadow: 0 0 5px #00ccff;
+            background: var(--hover-bg);
+            text-shadow: 0 0 5px var(--accent-text);
         }
         
         @media (max-width: 768px) {
@@ -449,8 +503,9 @@
         }
         
         .highlight {
-            color: #00ff88;
-            text-shadow: 0 0 5px #00ff88;
+            color: var(--secondary-text);
+            text-shadow: 0 0 5px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .blink {
@@ -484,9 +539,9 @@
             <div class="hero-content">
                 <div class="hero-text">
                     <h1>Sat-Sol-Sim</h1>
-                    <div class="subtitle">Solar System Satellite Simulation API</div>
+                    <div class="subtitle">Satellite and Solar System Simulator API</div>
                     <div class="description">
-                        Professional-grade 3D solar system visualization with comprehensive satellite constellation modeling. 
+                        Professional-grade 3D satellite and solar system simulator with comprehensive satellite constellation modeling. 
                         Built for education, research, and space mission planning with full programmatic control.
                     </div>
                     <div class="cta-buttons">
@@ -748,6 +803,12 @@
                 </div>
                 
                 <div class="demo-card">
+                    <h4>🚀 Voyager Explorer</h4>
+                    <p>Interactive 3D exploration of the legendary Voyager spacecraft with detailed models, mission timelines, space navigation, and real-time trajectory visualization.</p>
+                    <a href="voyager.html" class="btn btn-primary">Launch Voyager Explorer</a>
+                </div>
+                
+                <div class="demo-card">
                     <h4>⚡ Swagger API</h4>
                     <p>Interactive API documentation with live testing capabilities. Test endpoints, explore data models, and understand the API structure.</p>
                     <a href="swagger-ui.html" class="btn btn-primary">Test API</a>
@@ -863,17 +924,18 @@
         <div class="container">
                     <div class="footer-links">
             <a href="satellite_simulation.html">Launch Simulation</a>
-            <a href="demo/">Interactive Demos</a>
+                            <a href="demo/index.html">Interactive Demos</a>
             <a href="api-documentation.html">API Documentation</a>
             <a href="satellite-info.html">Satellite Information</a>
             <a href="swagger-ui.html">Swagger API</a>
             <a href="DOCS_README.md">Documentation Guide</a>
         </div>
-            <p>&copy; 2024 Sat-Sol-Sim | Professional Solar System Simulation API</p>
+            <p>&copy; 2024 sat-sol-sim | Professional Satellite and Solar System Simulator API</p>
             <p class="highlight">🛰️ Advancing space education through interactive visualization 🌌</p>
         </div>
     </footer>
 
+    <script src="themes.js"></script>
     <script>
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {

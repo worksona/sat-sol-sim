@@ -295,6 +295,68 @@
         .orbit-card.meo .orbit-title { color: #00ccff; }
         .orbit-card.geo .orbit-title { color: #ff6b6b; }
         .orbit-card.heo .orbit-title { color: #ff9f43; }
+        .orbit-card.voyager1 .orbit-title { color: #FFD700; }
+        .orbit-card.voyager2 .orbit-title { color: #00BFFF; }
+
+        .orbit-card.voyager1 { 
+            border-color: #FFD700; 
+            background: linear-gradient(135deg, #2C1810 0%, #8B4513 100%);
+        }
+        .orbit-card.voyager1:hover { 
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); 
+        }
+
+        .orbit-card.voyager2 { 
+            border-color: #00BFFF; 
+            background: linear-gradient(135deg, #191970 0%, #4169E1 100%);
+        }
+        .orbit-card.voyager2:hover { 
+            box-shadow: 0 0 30px rgba(0, 191, 255, 0.3); 
+        }
+
+        .voyager-journey {
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #00ccff;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .journey-timeline ul {
+            text-align: left;
+            margin-left: 1rem;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            color: #000;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3);
+            background: linear-gradient(135deg, #00ccff 0%, #00ff88 100%);
+        }
 
         .orbit-stats {
             list-style: none;
@@ -469,7 +531,7 @@
                 <li><a href="index.html">Home</a></li>
                 <li><a href="satellite_simulation.html">Simulation</a></li>
                 <li><a href="api-documentation.html">API Docs</a></li>
-                <li><a href="demo/">Demos</a></li>
+                <li><a href="demo/index.html">Demos</a></li>
             </ul>
         </nav>
     </header>
@@ -645,37 +707,112 @@
                 <section id="gallery" class="section">
                     <h2>🖼️ Satellite Gallery</h2>
                     <div class="image-gallery">
-                        <div class="image-card">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/International_Space_Station_after_undocking_of_STS-132.jpg/640px-International_Space_Station_after_undocking_of_STS-132.jpg" alt="International Space Station">
-                            <div class="caption">
-                                <h4>International Space Station (LEO)</h4>
-                                <p>The largest human-made object in low Earth orbit, serving as a microgravity laboratory.</p>
-                            </div>
+                        <div class="satellite-image">
+                            <img src="img/starlink.jpg" alt="Starlink Constellation">
+                            <h4>Starlink Constellation (LEO)</h4>
+                            <p>SpaceX's mega-constellation providing global broadband internet coverage from low Earth orbit.</p>
                         </div>
 
-                        <div class="image-card">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/GPS_Satellite_NASA_art-iif.jpg/640px-GPS_Satellite_NASA_art-iif.jpg" alt="GPS Satellite">
-                            <div class="caption">
-                                <h4>GPS Navigation Satellite (MEO)</h4>
-                                <p>Part of the Global Positioning System constellation providing precise location services.</p>
-                            </div>
+                        <div class="satellite-image">
+                            <img src="img/meo.webp" alt="GPS Navigation Satellite">
+                            <h4>GPS Navigation Satellite (MEO)</h4>
+                            <p>Part of the Global Positioning System constellation in medium Earth orbit providing precise location services.</p>
                         </div>
 
-                        <div class="image-card">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/GOES-16_spacecraft.jpg/640px-GOES-16_spacecraft.jpg" alt="GOES Weather Satellite">
-                            <div class="caption">
-                                <h4>GOES Weather Satellite (GEO)</h4>
-                                <p>Geostationary weather monitoring satellite providing continuous atmospheric observations.</p>
-                            </div>
+                        <div class="satellite-image">
+                            <img src="img/geo.webp" alt="Geostationary Satellite">
+                            <h4>Geostationary Satellite (GEO)</h4>
+                            <p>Communications and weather monitoring satellite in geostationary orbit, maintaining a fixed position relative to Earth.</p>
                         </div>
 
-                        <div class="image-card">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Starlink_Mission_%2847926144123%29.jpg/640px-Starlink_Mission_%2847926144123%29.jpg" alt="Starlink Satellites">
-                            <div class="caption">
-                                <h4>Starlink Constellation (LEO)</h4>
-                                <p>SpaceX's mega-constellation providing global broadband internet coverage.</p>
-                            </div>
+                        <div class="satellite-image">
+                            <img src="img/heo.jpg" alt="HEO Satellite">
+                            <h4>Highly Elliptical Orbit (HEO)</h4>
+                            <p>Specialized satellites in highly elliptical orbits, providing communications coverage for high-latitude regions and unique scientific observations.</p>
                         </div>
+
+                        <div class="satellite-image">
+                            <img src="img/earth-texture.jpg" alt="Earth from Space">
+                            <h4>Earth Observation View</h4>
+                            <p>The view satellites have of Earth, enabling weather monitoring, climate research, and global communications.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="voyager" class="section">
+                    <h2>🚀 Voyager Missions: Interstellar Explorers</h2>
+                    <p>The Voyager program represents humanity's most ambitious journey into the cosmos. Both spacecraft continue to transmit data from interstellar space, over 45 years after launch.</p>
+                    
+                    <div class="orbit-grid">
+                        <div class="orbit-card voyager1">
+                            <div class="orbit-title">Voyager 1</div>
+                            <div class="orbit-stats">
+                                <div class="stat-item">
+                                    <div class="stat-number">159 AU</div>
+                                    <div class="stat-label">Current Distance</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">2012</div>
+                                    <div class="stat-label">Entered Interstellar Space</div>
+                                </div>
+                            </div>
+                            <p><strong>Launch Date:</strong> September 5, 1977</p>
+                            <p><strong>Status:</strong> Active in interstellar space</p>
+                            <p><strong>Mission:</strong> Grand Tour of outer planets</p>
+                            <p><strong>Key Achievements:</strong></p>
+                            <ul>
+                                <li>First spacecraft to cross the heliopause</li>
+                                <li>Discovered active volcanism on Io</li>
+                                <li>Detailed images of Jupiter and Saturn systems</li>
+                                <li>Carries the Golden Record</li>
+                            </ul>
+                        </div>
+
+                        <div class="orbit-card voyager2">
+                            <div class="orbit-title">Voyager 2</div>
+                            <div class="orbit-stats">
+                                <div class="stat-item">
+                                    <div class="stat-number">132 AU</div>
+                                    <div class="stat-label">Current Distance</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">2018</div>
+                                    <div class="stat-label">Entered Interstellar Space</div>
+                                </div>
+                            </div>
+                            <p><strong>Launch Date:</strong> August 20, 1977</p>
+                            <p><strong>Status:</strong> Active in interstellar space</p>
+                            <p><strong>Mission:</strong> Grand Tour of all outer planets</p>
+                            <p><strong>Key Achievements:</strong></p>
+                            <ul>
+                                <li>Only spacecraft to visit all four gas giants</li>
+                                <li>Discovered 11 new moons around Uranus</li>
+                                <li>Found 6 new moons around Neptune</li>
+                                <li>Crossed the heliopause in 2018</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="voyager-journey">
+                        <h3>The Grand Tour Journey</h3>
+                        <p>Both Voyagers took advantage of a rare planetary alignment that occurs every 175 years, allowing them to visit multiple planets using gravitational assists. This "Grand Tour" trajectory enabled unprecedented exploration of the outer solar system.</p>
+                        
+                        <div class="journey-timeline">
+                            <h4>Trajectory Highlights:</h4>
+                            <ul>
+                                <li><strong>Earth Launch:</strong> Used gravity assists from Jupiter and Saturn</li>
+                                <li><strong>Jupiter Flyby:</strong> Revealed active volcanoes on Io, detailed ring system</li>
+                                <li><strong>Saturn Flyby:</strong> Close study of rings and moons</li>
+                                <li><strong>Uranus & Neptune (V2 only):</strong> First and only close-up studies</li>
+                                <li><strong>Interstellar Space:</strong> Continuing journey beyond the solar system</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="cta-section">
+                        <h3>🌌 Explore Voyager in 3D</h3>
+                        <p>Experience the Voyager missions in our interactive 3D environment. Navigate through space, follow their trajectories, and explore detailed information about each spacecraft.</p>
+                        <a href="voyager.html" class="cta-button">Launch Voyager Explorer</a>
                     </div>
                 </section>
 
@@ -719,7 +856,7 @@
             </div>
 
             <div class="footer">
-                <p>🌟 Solar System Satellite Simulation | Educational Resource</p>
+                <p>🌟 sat-sol-sim | Educational Resource</p>
                 <p>Data sources: NASA, ESA, Wikipedia, and various space agencies</p>
             </div>
         </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System API - Camera Tour Demo</title>
+    <title>sat-sol-sim API - Camera Tour Demo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body {
@@ -429,7 +429,7 @@
             // Try to load Earth texture, fallback to simple material
             const textureLoader = new THREE.TextureLoader();
             textureLoader.load(
-                'earth-texture.jpg',
+                '../img/earth-texture.jpg',
                 function(texture) {
                     const earthMaterial = new THREE.MeshPhongMaterial({ map: texture });
                     earth = new THREE.Mesh(earthGeometry, earthMaterial);

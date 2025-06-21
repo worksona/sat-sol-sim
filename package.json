@@ -1,16 +1,30 @@
 {
   "name": "sat-sol-sim",
   "version": "1.0.0",
-  "description": "A stunning, interactive 3D solar system simulation featuring realistic planetary motion, satellite constellations, and comprehensive programmatic control through a powerful JavaScript API",
+  "description": "sat-sol-sim: A stunning, interactive 3D satellite and solar system simulator featuring realistic planetary motion, satellite constellations, and comprehensive programmatic control through a powerful JavaScript API",
   "main": "sat-sol-sim.js",
   "module": "sat-sol-sim.js",
   "browser": "sat-sol-sim.js",
   "unpkg": "sat-sol-sim.min.js",
   "jsdelivr": "sat-sol-sim.min.js",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./sat-sol-sim.js",
+      "require": "./sat-sol-sim.js",
+      "browser": "./sat-sol-sim.min.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "echo \"Build process not yet implemented\"",
-    "prepublishOnly": "echo \"Running pre-publish checks...\""
+    "prepublishOnly": "npm run build && npm run test",
+    "postpublish": "echo \"Published successfully to npm!\"",
+    "size": "npm pack --dry-run",
+    "check": "npm doctor"
   },
   "keywords": [
     "satellite",
@@ -27,9 +41,13 @@
     "constellation",
     "api",
     "javascript",
-    "browser"
+    "browser",
+    "earth",
+    "orbit",
+    "realtime",
+    "physics"
   ],
-  "author": "David Olsson",
+  "author": "david@atomic47.co",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -42,11 +60,9 @@
   "files": [
     "sat-sol-sim.js",
     "sat-sol-sim.min.js",
-    "sats.csv",
-    "earth-texture.jpg",
+    "index.d.ts",
     "README.md",
-    "API_DOCUMENTATION.md",
-    "index.d.ts"
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=12.0.0"

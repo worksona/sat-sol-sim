@@ -1,6 +1,6 @@
-# Solar System API Demos
+# sat-sol-sim API Demos
 
-This directory contains comprehensive examples and demonstrations of the Solar System API capabilities.
+This directory contains comprehensive examples and demonstrations of the sat-sol-sim API capabilities.
 
 ## Demo Files
 
@@ -29,7 +29,7 @@ This directory contains comprehensive examples and demonstrations of the Solar S
 
 - Modern web browser with WebGL support
 - Three.js r128 or compatible
-- Solar System API v1.0.0+
+- sat-sol-sim API v1.0.0+
 
 ## Creating Custom Demos
 

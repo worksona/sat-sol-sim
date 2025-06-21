@@ -1,8 +1,8 @@
 /**
- * Solar System API v1.0.0
- * A comprehensive JavaScript API for controlling the 3D Solar System Satellite Simulation
+ * sat-sol-sim v1.0.0
+ * A comprehensive JavaScript API for controlling the 3D satellite and solar system simulator
  * 
- * @author Solar System Simulation Team
+ * @author david@atomic47.co
  * @version 1.0.0
  * @license MIT
  */
@@ -21,8 +21,8 @@
 }(typeof self !== 'undefined' ? self : this, function () {
 
 /**
- * Global Solar System API
- * Provides comprehensive control over the 3D solar system simulation
+ * Global sat-sol-sim API
+ * Provides comprehensive control over the 3D satellite and solar system simulator
  * All methods are chainable for fluid programming experience
  */
 const SolarSystemAPI = {
@@ -735,7 +735,7 @@ const SolarSystemAPI = {
         }, 100);
         
         console.log(`
-🌟 Solar System API v${this.utils.getVersion()} Ready! 🌟
+🌟 sat-sol-sim API v${this.utils.getVersion()} Ready! 🌟
 
 Example usage:
 SolarSystemAPI.simulation.setSpeed(2.0);

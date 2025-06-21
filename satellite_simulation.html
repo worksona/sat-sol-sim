@@ -6,111 +6,133 @@
     <title>3D Satellite Orbital Simulation - Enhanced</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        :root {
+            /* Default Classic Theme Variables */
+            --primary-bg: #001122;
+            --secondary-bg: rgba(0, 17, 34, 0.95);
+            --tertiary-bg: rgba(0, 0, 0, 0.8);
+            --primary-text: #00ff00;
+            --secondary-text: #00ff88;
+            --accent-text: #00ccff;
+            --border-color: #00ff00;
+            --hover-bg: rgba(0, 255, 0, 0.1);
+            --panel-bg: rgba(0, 17, 34, 0.9);
+            --button-bg: #003300;
+            --button-hover: #004400;
+            --button-active: #006600;
+            --input-bg: #003300;
+            --shadow-color: rgba(0, 255, 0, 0.3);
+            --error-color: #ff3333;
+            --warning-color: #ffff33;
+            --success-color: #50fa7b;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: #000011;
+            background: var(--primary-bg);
+            color: var(--primary-text);
             font-family: 'Courier New', monospace;
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        .ui-panel {
-            color: #00ff00;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #00ff00;
-            z-index: 100;
-            font-size: 12px;
-            line-height: 1.4;
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        
-        .ui-panel.hidden {
-            opacity: 0;
-            transform: translateY(-10px);
-            pointer-events: none;
-        }
-        
-        #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            max-width: 300px;
-        }
-        
-        #controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            max-width: 300px;
-        }
-        
-        #camera-controls {
-            position: absolute;
-            bottom: 10px;
-            left: 330px;
-            max-width: 340px;
-        }
-        
-        #satellite-config {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            max-width: 280px;
-        }
-        
-        #navigation-help {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            font-size: 11px;
-            max-width: 200px;
-        }
-        
-        #ui-toggle {
+        /* Left Sidebar Tray */
+        #sidebar-tray {
             position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 100vh;
+            background: var(--panel-bg);
+            border-right: 2px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            transform: translateX(0);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        #sidebar-tray.retracted {
+            transform: translateX(-280px);
+        }
+        
+        #sidebar-toggle {
+            position: absolute;
             top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            border-radius: 50%;
+            right: -40px;
             width: 40px;
-            height: 40px;
+            height: 80px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            font-size: 16px;
-            z-index: 200;
-            transition: background-color 0.2s;
+            font-size: 18px;
+            color: var(--primary-text);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            transform: translateY(-50%);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         }
         
-        #ui-toggle:hover {
-            background: rgba(0, 50, 0, 0.9);
+        #sidebar-toggle:hover {
+            background: var(--button-hover);
+            color: var(--secondary-text);
+        }
+        
+        #sidebar-content {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--primary-text);
+        }
+        
+        .sidebar-section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .sidebar-section h3 {
+            color: var(--secondary-text);
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         button {
-            background: #003300;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            background: var(--button-bg);
+            color: var(--primary-text);
+            border: 1px solid var(--border-color);
             padding: 6px 10px;
             margin: 2px;
             border-radius: 4px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
             font-size: 10px;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
         }
         
         button:hover {
-            background: #004400;
+            background: var(--button-hover);
         }
         
         button.active {
-            background: #006600;
-            border-color: #00ff88;
+            background: var(--button-active);
+            border-color: var(--secondary-text);
         }
         
         #camera-presets {
@@ -125,38 +147,58 @@
             padding: 4px 6px;
         }
         
+        #follow-objects {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 3px;
+            margin-bottom: 8px;
+        }
+        
+        #follow-objects button {
+            font-size: 8px;
+            padding: 3px 4px;
+        }
+        
+        #follow-objects #stop-follow {
+            grid-column: 1 / -1;
+            font-size: 9px;
+            padding: 4px 6px;
+        }
+        
         input {
-            background: #003300;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            background: var(--input-bg);
+            color: var(--primary-text);
+            border: 1px solid var(--border-color);
             padding: 4px;
             margin: 2px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
             font-size: 10px;
             width: 50px;
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
         }
         
         input[type="range"] {
             width: 100px;
             height: 15px;
-            background: #003300;
+            background: var(--input-bg);
         }
         
         .slider-value {
             font-size: 9px;
-            color: #00ff88;
+            color: var(--secondary-text);
             margin-left: 5px;
             min-width: 30px;
             display: inline-block;
             text-align: right;
+            transition: color 0.2s;
         }
         
         input[type="range"]::-webkit-slider-thumb {
             appearance: none;
             width: 16px;
             height: 16px;
-            background: #00ff00;
+            background: var(--primary-text);
             border-radius: 50%;
             cursor: pointer;
         }
@@ -164,7 +206,7 @@
         input[type="range"]::-moz-range-thumb {
             width: 16px;
             height: 16px;
-            background: #00ff00;
+            background: var(--primary-text);
             border-radius: 50%;
             cursor: pointer;
             border: none;
@@ -191,35 +233,79 @@
         }
         
         .satellite-class-label:hover {
-            background-color: #004400;
+            background-color: var(--button-hover);
         }
         
         .satellite-class-label:active {
-            background-color: #006600;
+            background-color: var(--button-active);
         }
         
-        .status-fail { color: #ff3333; }
+        .status-fail { color: var(--error-color); }
         .status-comm { color: #3333ff; }
-        .status-nav { color: #ffff33; }
-        .status-weather { color: #33ffff; }
+        .status-nav { color: var(--warning-color); }
+        .status-weather { color: var(--accent-text); }
         .status-military { color: #ff33ff; }
     </style>
 </head>
 <body>
-    <div id="info" class="ui-panel">
-        <div><strong>SOLAR SYSTEM SIMULATION</strong></div>
+    <!-- Left Sidebar Tray -->
+    <div id="sidebar-tray">
+        <div id="sidebar-toggle" onclick="toggleSidebar()">◀</div>
+        <div id="sidebar-content">
+            
+            <!-- System Info Section -->
+            <div class="sidebar-section">
+                <h3>📡 SAT-SOL-SIM</h3>
         <div id="satellite-count">Active Satellites: 0</div>
         <div id="failed-count">Failed Satellites: 0</div>
-        <div id="camera-info">Camera: Sun View</div>
+                <div id="camera-info">Camera: Earth Close</div>
         <div id="camera-mode">Mode: Preset | Follow: Off</div>
         <div id="celestial-info">☀️ Sun | ☿ Mercury | ♀ Venus | 🌍 Earth | ♂ Mars | ♃ Jupiter | ♄ Saturn | ⛢ Uranus | ♆ Neptune</div>
         <div id="selected-info">Click satellite for details</div>
     </div>
     
-    <div id="ui-toggle" onclick="toggleUI()">📋</div>
-    
-    <div id="controls" class="ui-panel">
-        <div><strong>SIMULATION CONTROLS</strong></div>
+            <!-- Camera Controls Section -->
+            <div class="sidebar-section">
+                <h3>📹 Camera Controls</h3>
+                <div id="camera-presets">
+                    <button onclick="setCameraPreset(0)" id="preset-0">☀️ Sun View</button>
+                    <button onclick="setCameraPreset(1)" id="preset-1">♂ Mars View</button>
+                    <button onclick="setCameraPreset(2)" id="preset-2">🌍 Earth Close</button>
+                    <button onclick="setCameraPreset(3)" id="preset-3">🌙 Moon View</button>
+                    <button onclick="setCameraPreset(4)" id="preset-4">🛰️ Orbital</button>
+                    <button onclick="setCameraPreset(5)" id="preset-5">♃ Jupiter</button>
+                    <button onclick="setCameraPreset(6)" id="preset-6">🌌 Solar System</button>
+                    <button onclick="setCameraPreset(7)" id="preset-7">🧭 Polar</button>
+                    <button onclick="setCameraPreset(8)" id="preset-8">🎲 Random Sat</button>
+                </div>
+                <button onclick="toggleFreeMode()" id="free-mode-btn">🎮 FREE MODE</button>
+                <button onclick="toggleFollowEarth()" id="follow-earth-btn">🌍 FOLLOW EARTH</button>
+                <button onclick="toggleNegativeLighting()" id="negative-btn">🌑 NEGATIVE</button>
+                <div style="font-size: 9px; margin-top: 5px; color: #888888;">Follow Earth: Camera tracks Earth's orbit<br>Works with Free Mode for manual control</div>
+            </div>
+            
+            <!-- Object Following Section -->
+            <div class="sidebar-section">
+                <h3>🎯 Object Following</h3>
+                <div style="font-size: 9px; margin-bottom: 8px; color: #888888;">Lock camera to object's orbit but look around freely</div>
+                <div id="follow-objects">
+                    <button onclick="followObject('sun')" id="follow-sun">☀️ Sun</button>
+                    <button onclick="followObject('mercury')" id="follow-mercury">☿ Mercury</button>
+                    <button onclick="followObject('venus')" id="follow-venus">♀ Venus</button>
+                    <button onclick="followObject('earth')" id="follow-earth-orbit">🌍 Earth</button>
+                    <button onclick="followObject('mars')" id="follow-mars">♂ Mars</button>
+                    <button onclick="followObject('jupiter')" id="follow-jupiter">♃ Jupiter</button>
+                    <button onclick="followObject('saturn')" id="follow-saturn">♄ Saturn</button>
+                    <button onclick="followObject('uranus')" id="follow-uranus">⛢ Uranus</button>
+                    <button onclick="followObject('neptune')" id="follow-neptune">♆ Neptune</button>
+                    <button onclick="stopFollowing()" id="stop-follow">❌ Stop</button>
+                </div>
+                <div id="follow-status" style="font-size: 9px; margin-top: 5px; color: #888888;">Following: None</div>
+            </div>
+            
+            <!-- Simulation Controls Section -->
+            <div class="sidebar-section">
+                <h3>⚙️ Simulation Controls</h3>
         <button onclick="togglePause()">⏸️ PAUSE</button>
         <button onclick="resetSimulation()">🔄 RESET</button>
         <button onclick="randomFailure()">⚠️ RANDOM FAILURE</button><br>
@@ -232,26 +318,9 @@
         </div>
     </div>
     
-    <div id="camera-controls" class="ui-panel">
-        <div><strong>CAMERA CONTROLS</strong></div>
-        <div id="camera-presets">
-            <button onclick="setCameraPreset(0)" id="preset-0">☀️ Sun View</button>
-            <button onclick="setCameraPreset(1)" id="preset-1">🔥 Sun Close</button>
-            <button onclick="setCameraPreset(2)" id="preset-2">🌍 Earth Close</button>
-            <button onclick="setCameraPreset(3)" id="preset-3">🌙 Moon View</button>
-            <button onclick="setCameraPreset(4)" id="preset-4">🛰️ Orbital</button>
-            <button onclick="setCameraPreset(5)" id="preset-5">🌌 Solar System</button>
-            <button onclick="setCameraPreset(6)" id="preset-6">🧭 Polar</button>
-            <button onclick="setCameraPreset(7)" id="preset-7">🎲 Random Sat</button>
-        </div>
-        <button onclick="toggleFreeMode()" id="free-mode-btn">🎮 FREE MODE</button>
-        <button onclick="toggleFollowEarth()" id="follow-earth-btn">🌍 FOLLOW EARTH</button>
-        <button onclick="toggleNegativeLighting()" id="negative-btn">🌑 NEGATIVE</button>
-        <div style="font-size: 9px; margin-top: 5px; color: #888888;">Follow Earth: Camera tracks Earth's orbit<br>Works with Free Mode for manual control</div>
-    </div>
-    
-    <div id="satellite-config" class="ui-panel">
-        <div><strong>SATELLITE CONFIGURATION</strong></div>
+            <!-- Satellite Configuration Section -->
+            <div class="sidebar-section">
+                <h3>🛰️ Satellite Configuration</h3>
         <div style="font-size: 9px; margin-bottom: 8px; color: #888888;">Click & hold labels to highlight satellites</div>
         <div class="config-row">
             <label class="satellite-class-label" data-type="LEO_COMM" onmousedown="highlightSatelliteClass('LEO_COMM')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('LEO_COMM')" ontouchend="unhighlightAllSatellites()">LEO Comm:</label>
@@ -285,18 +354,27 @@
         <button onclick="applySatelliteConfig()">APPLY CONFIG</button>
     </div>
     
-    <div id="navigation-help" class="ui-panel">
-        <div><strong>NAVIGATION</strong></div>
-        <div><strong>Touch:</strong></div>
+
+            <!-- Navigation Help Section -->
+            <div class="sidebar-section">
+                <h3>🧭 Navigation</h3>
+                <div><strong>Global Mode:</strong></div>
+                <div>• Drag: Spin Solar System</div>
+                <div>• Wheel: Zoom In/Out</div>
+                <div>• Click: Select Satellite</div>
+                <div><strong>Free Mode:</strong></div>
         <div>• Drag: Look Around</div>
-        <div>• Pinch: Zoom In/Out</div>
-        <div>• Tap: Select Satellite</div>
-        <div><strong>Desktop:</strong></div>
-        <div>• Mouse: Look Around</div>
         <div>• WASD: Move Camera</div>
         <div>• Q/E: Up/Down</div>
         <div>• Shift: Fast Mode</div>
         <div>• Space: Reset View</div>
+                <div><strong>Touch:</strong></div>
+                <div>• Drag: Rotate View</div>
+                <div>• Pinch: Zoom</div>
+                <div>• Tap: Select</div>
+            </div>
+            
+        </div>
     </div>
 
     <script>
@@ -317,25 +395,120 @@
         let earthOrbitAngle = 0;
         let moonOrbitAngle = 0;
         let highlightedSatellites = [];
-        let currentCameraPreset = 0;
+        let currentCameraPreset = 2;
         let freeMode = false;
         let followEarth = false;
         let uiVisible = true;
         let earthFollowOffset = new THREE.Vector3();
         let lastEarthPosition = new THREE.Vector3();
         let negativeLighting = false;
+        let followingObject = null;
+        let followingObjectName = '';
+        let lastFollowedPosition = new THREE.Vector3();
+        let followOffset = new THREE.Vector3(5, 2, 5);
         let planets = {};
         let planetAngles = {};
+        let planetMoons = {};
+        let moonAngles = {};
+        let planetOrbits = [];
+        let moonOrbits = [];
+        let voyagerCrafts = [];
         
-        // Planet data (scaled for visualization)
+        // Global camera control variables
+        let globalCameraDistance = 200;
+        let globalCameraAngleX = 0;
+        let globalCameraAngleY = 0;
+        let globalCameraTarget = new THREE.Vector3(0, 0, 0);
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        // Enhanced planet data with moons (scaled for visualization)
         const planetData = {
-            mercury: { name: "Mercury", size: 0.15, distance: 20, speed: 0.001, color: 0x8c7853, tilt: 0.034 },
-            venus: { name: "Venus", size: 0.36, distance: 30, speed: 0.0007, color: 0xffc649, tilt: 177.4 },
-            mars: { name: "Mars", size: 0.2, distance: 70, speed: 0.0003, color: 0xcd5c5c, tilt: 25.19 },
-            jupiter: { name: "Jupiter", size: 4.2, distance: 120, speed: 0.00008, color: 0xd8ca9d, tilt: 3.13 },
-            saturn: { name: "Saturn", size: 3.5, distance: 180, speed: 0.00005, color: 0xfad5a5, tilt: 26.73 },
-            uranus: { name: "Uranus", size: 1.5, distance: 240, speed: 0.00003, color: 0x4fd0e3, tilt: 97.77 },
-            neptune: { name: "Neptune", size: 1.4, distance: 300, speed: 0.00002, color: 0x4b70dd, tilt: 28.32 }
+            mercury: { 
+                name: "Mercury", size: 0.15, distance: 20, speed: 0.001, color: 0x8c7853, tilt: 0.034,
+                moons: []
+            },
+            venus: { 
+                name: "Venus", size: 0.36, distance: 30, speed: 0.0007, color: 0xffc649, tilt: 177.4,
+                moons: []
+            },
+            earth: {
+                name: "Earth", size: 1, distance: 50, speed: 0.0002, color: 0x6b93d6, tilt: 23.44,
+                moons: [
+                    { name: "Moon", size: 0.27, distance: 15, speed: 0.002, color: 0xaaaaaa }
+                ]
+            },
+            mars: { 
+                name: "Mars", size: 0.2, distance: 70, speed: 0.0003, color: 0xcd5c5c, tilt: 25.19,
+                moons: [
+                    { name: "Phobos", size: 0.008, distance: 0.6, speed: 0.02, color: 0x8c7853 },
+                    { name: "Deimos", size: 0.006, distance: 1.0, speed: 0.01, color: 0x8c7853 }
+                ]
+            },
+            jupiter: { 
+                name: "Jupiter", size: 4.2, distance: 120, speed: 0.00008, color: 0xd8ca9d, tilt: 3.13,
+                moons: [
+                    { name: "Io", size: 0.12, distance: 7, speed: 0.008, color: 0xffff99 },
+                    { name: "Europa", size: 0.10, distance: 9, speed: 0.006, color: 0xaaeeff },
+                    { name: "Ganymede", size: 0.18, distance: 12, speed: 0.004, color: 0x888888 },
+                    { name: "Callisto", size: 0.16, distance: 16, speed: 0.003, color: 0x444444 }
+                ]
+            },
+            saturn: { 
+                name: "Saturn", size: 3.5, distance: 180, speed: 0.00005, color: 0xfad5a5, tilt: 26.73,
+                moons: [
+                    { name: "Mimas", size: 0.04, distance: 6, speed: 0.009, color: 0xcccccc },
+                    { name: "Enceladus", size: 0.05, distance: 8, speed: 0.007, color: 0xffffff },
+                    { name: "Titan", size: 0.25, distance: 15, speed: 0.003, color: 0xffaa44 },
+                    { name: "Iapetus", size: 0.08, distance: 22, speed: 0.002, color: 0x666666 }
+                ]
+            },
+            uranus: { 
+                name: "Uranus", size: 1.5, distance: 240, speed: 0.00003, color: 0x4fd0e3, tilt: 97.77,
+                moons: [
+                    { name: "Miranda", size: 0.04, distance: 3, speed: 0.012, color: 0xaaaaaa },
+                    { name: "Ariel", size: 0.06, distance: 4, speed: 0.009, color: 0xbbbbbb },
+                    { name: "Umbriel", size: 0.06, distance: 5, speed: 0.007, color: 0x777777 },
+                    { name: "Titania", size: 0.08, distance: 7, speed: 0.005, color: 0x999999 },
+                    { name: "Oberon", size: 0.08, distance: 9, speed: 0.004, color: 0x888888 }
+                ]
+            },
+            neptune: { 
+                name: "Neptune", size: 1.4, distance: 300, speed: 0.00002, color: 0x4b70dd, tilt: 28.32,
+                moons: [
+                    { name: "Triton", size: 0.12, distance: 6, speed: 0.008, color: 0xdddddd },
+                    { name: "Nereid", size: 0.03, distance: 20, speed: 0.001, color: 0xaaaaaa }
+                ]
+            }
+        };
+        
+        // Voyager mission data
+        const voyagerData = {
+            voyager1: {
+                name: "Voyager 1",
+                launchDate: "1977-09-05",
+                currentDistance: 159, // AU from Sun (approximate)
+                status: "Active",
+                mission: "Grand Tour of outer planets",
+                achievements: [
+                    "First spacecraft to cross heliopause",
+                    "Discovered active volcanism on Io",
+                    "Detailed images of Jupiter and Saturn systems"
+                ]
+            },
+            voyager2: {
+                name: "Voyager 2", 
+                launchDate: "1977-08-20",
+                currentDistance: 132, // AU from Sun (approximate)
+                status: "Active",
+                mission: "Grand Tour of all outer planets",
+                achievements: [
+                    "Only spacecraft to visit Uranus and Neptune",
+                    "Discovered 11 new moons around Uranus",
+                    "Found 6 new moons around Neptune"
+                ]
+            }
         };
         
         // Camera presets - predefined advantageous viewing positions
@@ -352,13 +525,21 @@
                 getTarget: () => earthSystem.position.clone()
             },
             {
-                name: "Sun Close",
-                description: "75% closer to Earth from Sun",
+                name: "Mars View",
+                description: "View Earth from Mars",
                 getPosition: () => {
-                    const sunPos = sun.position.clone();
+                    const mars = planets.mars;
+                    if (mars) {
+                        const marsPos = mars.position.clone();
                     const earthPos = earthSystem.position.clone();
-                    const direction = earthPos.clone().sub(sunPos).normalize();
-                    return sunPos.clone().add(direction.multiplyScalar(2)); // 75% closer (8 to 2)
+                        // Position camera slightly off Mars towards Earth
+                        const marsToEarth = earthPos.clone().sub(marsPos).normalize();
+                        return marsPos.clone().add(marsToEarth.multiplyScalar(2));
+                    } else {
+                        // Fallback if Mars not available
+                        const earthPos = earthSystem.position.clone();
+                        return earthPos.clone().add(new THREE.Vector3(40, 10, 20));
+                    }
                 },
                 getTarget: () => earthSystem.position.clone()
             },
@@ -367,7 +548,11 @@
                 description: "Close orbit around Earth",
                 getPosition: () => {
                     const earthPos = earthSystem.position.clone();
-                    return earthPos.clone().add(new THREE.Vector3(8, 3, 8));
+                    const sunPos = sun.position.clone();
+                    // Position camera between Sun and Earth, but closer to Earth
+                    const sunToEarth = earthPos.clone().sub(sunPos).normalize();
+                    const offset = sunToEarth.clone().multiplyScalar(-8); // Negative to be on Sun side
+                    return earthPos.clone().add(offset).add(new THREE.Vector3(0, 3, 2));
                 },
                 getTarget: () => earthSystem.position.clone()
             },
@@ -386,14 +571,39 @@
                 description: "Satellite constellation overview",
                 getPosition: () => {
                     const earthPos = earthSystem.position.clone();
-                    return earthPos.clone().add(new THREE.Vector3(15, 10, 15));
+                    const sunPos = sun.position.clone();
+                    // Position camera for satellite overview, showing illuminated side
+                    const sunToEarth = earthPos.clone().sub(sunPos).normalize();
+                    const offset = sunToEarth.clone().multiplyScalar(-15); // On Sun side
+                    return earthPos.clone().add(offset).add(new THREE.Vector3(0, 10, 5));
                 },
                 getTarget: () => earthSystem.position.clone()
             },
             {
+                name: "Jupiter View",
+                description: "View Jupiter and outer planets",
+                getPosition: () => {
+                    const jupiter = planets.jupiter;
+                    if (jupiter) {
+                        const jupiterPos = jupiter.position.clone();
+                        const sunPos = sun.position.clone();
+                        // Position camera to show Jupiter from sunlit side
+                        const sunToJupiter = jupiterPos.clone().sub(sunPos).normalize();
+                        const offset = sunToJupiter.clone().multiplyScalar(-25); // Distance from Jupiter
+                        return jupiterPos.clone().add(offset).add(new THREE.Vector3(0, 15, 10));
+                    } else {
+                        return new THREE.Vector3(100, 30, 80);
+                    }
+                },
+                getTarget: () => {
+                    const jupiter = planets.jupiter;
+                    return jupiter ? jupiter.position.clone() : new THREE.Vector3(120, 0, 0);
+                }
+            },
+            {
                 name: "Solar System",
-                description: "Wide view of Sun-Earth system",
-                getPosition: () => new THREE.Vector3(0, 50, 150),
+                description: "Wide view of entire solar system",
+                getPosition: () => new THREE.Vector3(200, 100, 300),
                 getTarget: () => new THREE.Vector3(0, 0, 0)
             },
             {
@@ -401,7 +611,11 @@
                 description: "View from Earth's pole",
                 getPosition: () => {
                     const earthPos = earthSystem.position.clone();
-                    return earthPos.clone().add(new THREE.Vector3(0, 20, 0));
+                    const sunPos = sun.position.clone();
+                    // Position camera above Earth's pole, slightly towards Sun
+                    const sunToEarth = earthPos.clone().sub(sunPos).normalize();
+                    const offset = sunToEarth.clone().multiplyScalar(-3); // Slight offset towards Sun
+                    return earthPos.clone().add(new THREE.Vector3(0, 20, 0)).add(offset);
                 },
                 getTarget: () => earthSystem.position.clone()
             },
@@ -431,44 +645,157 @@
         let initialPinchDistance = 0;
         let currentPinchDistance = 0;
         
-        // Satellite classes with orbital parameters and inclinations
+        // Satellite classes with realistic orbital parameters and inclinations
+        // Earth radius = 1 unit, so distances are in Earth radii from center
         const satelliteClasses = {
             LEO_COMM: { 
-                altitude: 1.3, 
+                altitude: 1.15, // ~400km altitude (1 + 400/6371)
                 color: 0x3333ff, 
                 name: "LEO Communications", 
                 speed: 0.02,
                 inclinations: [0, 15, 30, 45, 60, 75, 90, 105]
             },
             LEO_WEATHER: { 
-                altitude: 1.5, 
+                altitude: 1.25, // ~800km altitude 
                 color: 0x33ffff, 
                 name: "Weather Satellite", 
                 speed: 0.018,
                 inclinations: [90, 105, 98, 85]
             },
             MEO_NAV: { 
-                altitude: 2.5, 
+                altitude: 4.2, // ~20,200km altitude (GPS orbit)
                 color: 0xffff33, 
                 name: "Navigation (GPS)", 
-                speed: 0.01,
+                speed: 0.008,
                 inclinations: [55, 55, 55, 55, 55, 55]
             },
             GEO_COMM: { 
-                altitude: 4.2, 
+                altitude: 6.6, // ~35,786km altitude (geostationary)
                 color: 0x3333ff, 
                 name: "GEO Communications", 
-                speed: 0.002,
+                speed: 0.002, // Same as Earth rotation
                 inclinations: [0, 2, 1]
             },
             MILITARY: { 
-                altitude: 1.8, 
+                altitude: 1.4, // ~1000km altitude
                 color: 0xff33ff, 
                 name: "Military/Recon", 
                 speed: 0.015,
                 inclinations: [28, 45, 63, 82, 97]
             }
         };
+        
+        // Object Following Functions
+        function followObject(objectName) {
+            // Reset any existing follow modes
+            followEarth = false;
+            
+            // Set new following object
+            followingObjectName = objectName;
+            followingObject = true;
+            
+            // Get initial position
+            const initialPosition = new THREE.Vector3();
+            if (objectName === 'sun') {
+                initialPosition.copy(sun.position);
+            } else if (objectName === 'earth') {
+                initialPosition.copy(earthSystem.position);
+            } else if (planets[objectName]) {
+                initialPosition.copy(planets[objectName].position);
+            }
+            
+            // Calculate camera position on the sunlit side
+            const sunPosition = sun.position.clone();
+            let offsetPosition;
+            
+            if (objectName === 'sun') {
+                // For sun, position camera at a distance
+                offsetPosition = new THREE.Vector3(15, 8, 15);
+            } else {
+                // For other objects, position camera on the sunlit side (between sun and object)
+                const objectToSun = sunPosition.clone().sub(initialPosition).normalize();
+                
+                // Calculate appropriate distance based on object type
+                let distance = 8; // Default distance
+                if (objectName === 'earth') {
+                    distance = 10;
+                } else if (['jupiter', 'saturn'].includes(objectName)) {
+                    distance = 15;
+                } else if (['mercury', 'venus'].includes(objectName)) {
+                    distance = 6;
+                } else if (['mars'].includes(objectName)) {
+                    distance = 8;
+                } else if (['uranus', 'neptune'].includes(objectName)) {
+                    distance = 12;
+                }
+                
+                // Position camera between object and sun, closer to object but on sunlit side
+                // This ensures we see the illuminated face of the object
+                const sunDirection = objectToSun.clone(); // Direction from object towards sun
+                const lateralOffset = new THREE.Vector3(-sunDirection.z, 0, sunDirection.x).normalize().multiplyScalar(distance * 0.3);
+                const verticalOffset = new THREE.Vector3(0, distance * 0.3, 0);
+                
+                offsetPosition = initialPosition.clone()
+                    .add(sunDirection.multiplyScalar(distance * 0.6)) // Move towards sun from object
+                    .add(lateralOffset) // Add lateral offset for better angle
+                    .add(verticalOffset); // Add some height
+            }
+            
+            camera.position.copy(offsetPosition);
+            camera.lookAt(initialPosition); // Always look at the object
+            
+            // Initialize last position tracking
+            lastFollowedPosition.copy(initialPosition);
+            
+            // Enable free mode for look-around capability
+            freeMode = true;
+            
+            // Update UI
+            updateFollowButtons();
+            updateFreeModeButton();
+            updateFollowEarthButton();
+            updateCameraInfo();
+            
+            console.log(`Now following: ${objectName} from sunlit side`);
+        }
+        
+        function stopFollowing() {
+            followingObject = false;
+            followingObjectName = '';
+            followEarth = false;
+            
+            // Reset to preset mode
+            freeMode = false;
+            setCameraPreset(5); // Solar system view
+            
+            // Update UI
+            updateFollowButtons();
+            updateFreeModeButton();
+            updateFollowEarthButton();
+            updateCameraInfo();
+            
+            console.log('Stopped following objects');
+        }
+        
+        function updateFollowButtons() {
+            const buttons = document.querySelectorAll('#follow-objects button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (followingObjectName) {
+                const activeBtn = document.getElementById(`follow-${followingObjectName}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+            
+            // Update status text
+            const statusEl = document.getElementById('follow-status');
+            if (statusEl) {
+                statusEl.textContent = followingObjectName ? 
+                    `Following: ${followingObjectName.charAt(0).toUpperCase() + followingObjectName.slice(1)}` : 
+                    'Following: None';
+            }
+        }
         
         // Initialize the simulation
         function init() {
@@ -506,8 +833,8 @@
                 const ambientLight = new THREE.AmbientLight(0x202040, 0.2);
                 scene.add(ambientLight);
                 
-                // Set default camera to Sun view
-                setCameraPreset(0);
+                // Set default camera to Earth Close view
+                setCameraPreset(2);
                 
                 // Initialize Earth tracking
                 lastEarthPosition.copy(earthSystem.position);
@@ -517,6 +844,7 @@
                 updateFreeModeButton();
                 updateFollowEarthButton();
                 updateNegativeButton();
+                updateFollowButtons();
                 
                 // Add event listeners
                 window.addEventListener('resize', onWindowResize);
@@ -524,6 +852,7 @@
                 renderer.domElement.addEventListener('mousemove', onMouseMove);
                 renderer.domElement.addEventListener('mousedown', onMouseDown);
                 renderer.domElement.addEventListener('mouseup', onMouseUp);
+                renderer.domElement.addEventListener('wheel', onMouseWheel, { passive: false });
                 window.addEventListener('keydown', onKeyDown);
                 window.addEventListener('keyup', onKeyUp);
                 
@@ -617,6 +946,19 @@
             Object.keys(planetData).forEach(planetKey => {
                 const data = planetData[planetKey];
                 
+                // Create planet orbit visualization
+                const orbitGeometry = new THREE.RingGeometry(data.distance - 0.5, data.distance + 0.5, 128);
+                const orbitMaterial = new THREE.MeshBasicMaterial({
+                    color: data.color,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide
+                });
+                const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                planetOrbits.push(orbit);
+                scene.add(orbit);
+                
                 // Create planet geometry
                 const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
                 
@@ -624,8 +966,12 @@
                 const planetMaterial = new THREE.MeshPhongMaterial({
                     color: data.color,
                     shininess: 10,
-                    transparent: false
+                    transparent: false,
+                    emissive: new THREE.Color(data.color).multiplyScalar(0.05) // Slight self-illumination
                 });
+                
+                // Create planet group to hold planet and moons
+                const planetGroup = new THREE.Group();
                 
                 // Add some texture variation
                 if (planetKey === 'jupiter') {
@@ -646,42 +992,81 @@
                     const rings = new THREE.Mesh(ringGeometry, ringMaterial);
                     rings.rotation.x = Math.PI / 2;
                     
-                    const planetGroup = new THREE.Group();
                     planetGroup.add(planet);
                     planetGroup.add(rings);
                     
-                    // Position planet
-                    planetGroup.position.x = data.distance;
-                    planetGroup.receiveShadow = true;
-                    planetGroup.castShadow = true;
-                    
                     // Apply axial tilt
                     planetGroup.rotation.z = (data.tilt * Math.PI) / 180;
-                    
-                    planets[planetKey] = planetGroup;
-                    planetAngles[planetKey] = Math.random() * Math.PI * 2; // Random starting position
-                    scene.add(planetGroup);
-                    return;
-                }
-                
+                } else {
                 const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-                planet.position.x = data.distance;
                 planet.receiveShadow = true;
                 planet.castShadow = true;
                 
                 // Apply axial tilt
                 planet.rotation.z = (data.tilt * Math.PI) / 180;
                 
-                planets[planetKey] = planet;
+                    planetGroup.add(planet);
+                }
+                
+                // Create moons for this planet
+                if (data.moons && data.moons.length > 0) {
+                    const planetMoonGroup = [];
+                    const planetMoonAngles = [];
+                    
+                    data.moons.forEach((moonData, index) => {
+                        // Create moon orbit
+                        const moonOrbitGeometry = new THREE.RingGeometry(moonData.distance - 0.05, moonData.distance + 0.05, 64);
+                        const moonOrbitMaterial = new THREE.MeshBasicMaterial({
+                            color: moonData.color,
+                            transparent: true,
+                            opacity: 0.15,
+                            side: THREE.DoubleSide
+                        });
+                        const moonOrbit = new THREE.Mesh(moonOrbitGeometry, moonOrbitMaterial);
+                        moonOrbit.rotation.x = Math.PI / 2;
+                        planetGroup.add(moonOrbit);
+                        moonOrbits.push(moonOrbit);
+                        
+                        // Create moon
+                        const moonGeometry = new THREE.SphereGeometry(moonData.size, 16, 16);
+                        const moonMaterial = new THREE.MeshPhongMaterial({
+                            color: moonData.color,
+                            shininess: 5
+                        });
+                        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+                        
+                        // Position moon
+                        const angle = Math.random() * Math.PI * 2;
+                        moon.position.x = Math.cos(angle) * moonData.distance;
+                        moon.position.z = Math.sin(angle) * moonData.distance;
+                        
+                        moon.receiveShadow = true;
+                        moon.castShadow = true;
+                        
+                        planetGroup.add(moon);
+                        planetMoonGroup.push(moon);
+                        planetMoonAngles.push(angle);
+                    });
+                    
+                    planetMoons[planetKey] = planetMoonGroup;
+                    moonAngles[planetKey] = planetMoonAngles;
+                }
+                
+                // Position planet group
+                planetGroup.position.x = data.distance;
+                planetGroup.receiveShadow = true;
+                planetGroup.castShadow = true;
+                
+                planets[planetKey] = planetGroup;
                 planetAngles[planetKey] = Math.random() * Math.PI * 2; // Random starting position
-                scene.add(planet);
+                scene.add(planetGroup);
             });
         }
         
         function createEarthSystem() {
             // Create Earth system group
             earthSystem = new THREE.Group();
-            earthSystem.position.set(50, 0, 0); // Distance from Sun
+            earthSystem.position.set(50, 0, 0); // Initial distance from Sun
             scene.add(earthSystem);
             
             // Create Earth
@@ -690,7 +1075,7 @@
             // Load Earth texture
             const textureLoader = new THREE.TextureLoader();
             const earthTexture = textureLoader.load(
-                './earth-texture.jpg',
+                './img/earth-texture.jpg',
                 function(texture) {
                     console.log('Earth texture loaded successfully');
                 },
@@ -722,16 +1107,33 @@
             const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
             earthSystem.add(atmosphere);
             
-            // Create Moon
+            // Create Moon (realistic distance - about 60 Earth radii, scaled down to 15 for visibility)
             const moonGeometry = new THREE.SphereGeometry(0.27, 32, 32);
             const moonMaterial = new THREE.MeshPhongMaterial({
                 color: 0xaaaaaa
             });
             moon = new THREE.Mesh(moonGeometry, moonMaterial);
-            moon.position.set(3.8, 0, 0); // Distance from Earth
+            moon.position.set(15, 0, 0); // More realistic distance from Earth (was 3.8)
             moon.receiveShadow = true;
             moon.castShadow = true;
             earthSystem.add(moon);
+            
+            // Add Earth to planets for orbital mechanics
+            planets.earth = earthSystem;
+            planetAngles.earth = 0; // Start at 0 angle
+            
+            // Create Earth's orbital path
+            const earthOrbitGeometry = new THREE.RingGeometry(49.8, 50.2, 128);
+            const earthOrbitMaterial = new THREE.MeshBasicMaterial({
+                color: 0x6b93d6,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide
+            });
+            const earthOrbit = new THREE.Mesh(earthOrbitGeometry, earthOrbitMaterial);
+            earthOrbit.rotation.x = Math.PI / 2;
+            scene.add(earthOrbit);
+            planetOrbits.push(earthOrbit);
         }
         
         function createOrbitalRings() {
@@ -838,21 +1240,23 @@
             statusLight.position.y = 0.03;
             satelliteGroup.add(statusLight);
             
-            // Create trail
+            // Create trail with BufferGeometry
             const trailGeometry = new THREE.BufferGeometry();
-            const trailPositions = new Float32Array(maxTrailLength * 3);
-            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            const positions = new Float32Array(100 * 3); // 100 points max
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             
             const trailMaterial = new THREE.LineBasicMaterial({
                 color: satClass.color,
                 transparent: true,
-                opacity: 0.6
+                opacity: 0.7
             });
             
             const trail = new THREE.Line(trailGeometry, trailMaterial);
             trail.visible = showTrails;
             trails.push(trail);
             scene.add(trail);
+            
+            console.log(`Trail created for ${type}_${index}, color: 0x${satClass.color.toString(16)}, visible: ${trail.visible}`);
             
             // Satellite properties
             satelliteGroup.userData = {
@@ -892,6 +1296,103 @@
             const z = z_orbit;
             
             return new THREE.Vector3(x, z, y);
+        }
+        
+        function createVoyagerCrafts() {
+            // Create Voyager 1 and 2 as simplified models
+            Object.keys(voyagerData).forEach(voyagerKey => {
+                const data = voyagerData[voyagerKey];
+                
+                // Create main body (simplified box)
+                const bodyGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.15);
+                const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                
+                // Create dish antenna
+                const dishGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.02, 16);
+                const dishMaterial = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+                const dish = new THREE.Mesh(dishGeometry, dishMaterial);
+                dish.position.set(0, 0.15, 0);
+                
+                // Create boom arms
+                const boomGeometry = new THREE.CylinderGeometry(0.005, 0.005, 1, 8);
+                const boomMaterial = new THREE.MeshPhongMaterial({ color: 0x444444 });
+                
+                const boom1 = new THREE.Mesh(boomGeometry, boomMaterial);
+                boom1.rotation.z = Math.PI / 2;
+                boom1.position.x = 0.5;
+                
+                const boom2 = new THREE.Mesh(boomGeometry, boomMaterial);
+                boom2.rotation.z = -Math.PI / 2;
+                boom2.position.x = -0.5;
+                
+                // RTG (Radioisotope Thermoelectric Generator)
+                const rtgGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8);
+                const rtgMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+                const rtg = new THREE.Mesh(rtgGeometry, rtgMaterial);
+                rtg.position.set(0.8, 0, 0);
+                
+                // Instruments
+                const instGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.05);
+                const instMaterial = new THREE.MeshPhongMaterial({ color: 0x555555 });
+                const instruments = new THREE.Mesh(instGeometry, instMaterial);
+                instruments.position.set(0, 0, 0.1);
+                
+                // Create Voyager group
+                const voyager = new THREE.Group();
+                voyager.add(body);
+                voyager.add(dish);
+                voyager.add(boom1);
+                voyager.add(boom2);
+                voyager.add(rtg);
+                voyager.add(instruments);
+                
+                // Position Voyager at current approximate distance
+                const angle = voyagerKey === 'voyager1' ? 0.5 : 1.0;
+                const distance = data.currentDistance * 2; // Scale for visualization
+                voyager.position.x = Math.cos(angle) * distance;
+                voyager.position.z = Math.sin(angle) * distance;
+                voyager.position.y = voyagerKey === 'voyager1' ? 20 : -15; // Different heights
+                
+                voyager.userData = {
+                    name: data.name,
+                    type: 'voyager',
+                    data: data
+                };
+                
+                // Create trajectory path for Voyager
+                const trajectoryPoints = [];
+                const numPoints = 100;
+                const maxDistance = data.currentDistance * 2;
+                
+                for (let i = 0; i < numPoints; i++) {
+                    const t = i / (numPoints - 1);
+                    const currentDistance = 10 + t * (maxDistance - 10); // From 10 AU to current distance
+                    const currentAngle = angle + t * 0.5; // Slight curve to trajectory
+                    
+                    trajectoryPoints.push(new THREE.Vector3(
+                        Math.cos(currentAngle) * currentDistance,
+                        voyagerKey === 'voyager1' ? 20 - t * 10 : -15 + t * 5,
+                        Math.sin(currentAngle) * currentDistance
+                    ));
+                }
+                
+                const trajectoryGeometry = new THREE.BufferGeometry().setFromPoints(trajectoryPoints);
+                const trajectoryMaterial = new THREE.LineBasicMaterial({
+                    color: voyagerKey === 'voyager1' ? 0xffd700 : 0x87ceeb,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const trajectory = new THREE.Line(trajectoryGeometry, trajectoryMaterial);
+                trajectory.visible = showOrbits;
+                scene.add(trajectory);
+                planetOrbits.push(trajectory); // Add to planet orbits for visibility toggle
+                
+                voyagerCrafts.push(voyager);
+                scene.add(voyager);
+                
+                console.log(`${data.name} created at distance ${data.currentDistance} AU`);
+            });
         }
         
         function createStars() {
@@ -967,15 +1468,11 @@
                 // Rotate Earth on its axis
                 earth.rotation.y += 0.005 * simulationSpeed;
                 
-                // Orbit Earth around Sun
-                earthOrbitAngle += 0.0002 * simulationSpeed;
-                earthSystem.position.x = Math.cos(earthOrbitAngle) * 50;
-                earthSystem.position.z = Math.sin(earthOrbitAngle) * 50;
-                
+                // Earth now orbits through the planet system
                 // Orbit Moon around Earth
-                moonOrbitAngle += 0.008 * simulationSpeed;
-                moon.position.x = Math.cos(moonOrbitAngle) * 3.8;
-                moon.position.z = Math.sin(moonOrbitAngle) * 3.8;
+                moonOrbitAngle += 0.002 * simulationSpeed; // Slower orbit for realism
+                moon.position.x = Math.cos(moonOrbitAngle) * 15;
+                moon.position.z = Math.sin(moonOrbitAngle) * 15;
                 
                 // Animate planets
                 Object.keys(planetData).forEach(planetKey => {
@@ -991,8 +1488,30 @@
                         if (planetKey === 'saturn') {
                             // Saturn is a group, rotate the planet inside
                             planet.children[0].rotation.y += 0.01 * simulationSpeed;
+                        } else if (planet.children.length > 0) {
+                            // Find the main planet mesh and rotate it
+                            const mainPlanet = planet.children.find(child => child.geometry && child.geometry.type === 'SphereGeometry' && child.geometry.parameters.radius === data.size);
+                            if (mainPlanet) {
+                                mainPlanet.rotation.y += 0.01 * simulationSpeed;
+                            }
                         } else {
                             planet.rotation.y += 0.01 * simulationSpeed;
+                        }
+                        
+                        // Animate moons if they exist
+                        if (planetMoons[planetKey] && moonAngles[planetKey]) {
+                            planetMoons[planetKey].forEach((moon, index) => {
+                                const moonData = data.moons[index];
+                                if (moonData) {
+                                    moonAngles[planetKey][index] += moonData.speed * simulationSpeed;
+                                    const angle = moonAngles[planetKey][index];
+                                    moon.position.x = Math.cos(angle) * moonData.distance;
+                                    moon.position.z = Math.sin(angle) * moonData.distance;
+                                    
+                                    // Rotate moon on its axis
+                                    moon.rotation.y += 0.02 * simulationSpeed;
+                                }
+                            });
                         }
                     }
                 });
@@ -1059,6 +1578,67 @@
                     lastEarthPosition.copy(currentEarthPosition);
                 }
                 
+                // Handle Object Following mode
+                if (followingObject) {
+                    const currentFollowedPosition = new THREE.Vector3();
+                    
+                    // Get current position of followed object
+                    if (followingObjectName === 'sun') {
+                        currentFollowedPosition.copy(sun.position);
+                    } else if (followingObjectName === 'earth') {
+                        currentFollowedPosition.copy(earthSystem.position);
+                    } else if (planets[followingObjectName]) {
+                        currentFollowedPosition.copy(planets[followingObjectName].position);
+                    }
+                    
+                    // Recalculate optimal camera position relative to sun for proper lighting
+                    const sunPosition = sun.position.clone();
+                    let optimalCameraPosition;
+                    
+                    if (followingObjectName === 'sun') {
+                        // For sun, maintain a fixed offset
+                        optimalCameraPosition = new THREE.Vector3(15, 8, 15);
+                    } else {
+                        // For other objects, maintain position on sunlit side
+                        const objectToSun = sunPosition.clone().sub(currentFollowedPosition).normalize();
+                        
+                        // Distance based on object type
+                        let distance = 8;
+                        if (followingObjectName === 'earth') {
+                            distance = 10;
+                        } else if (['jupiter', 'saturn'].includes(followingObjectName)) {
+                            distance = 15;
+                        } else if (['mercury', 'venus'].includes(followingObjectName)) {
+                            distance = 6;
+                        } else if (['mars'].includes(followingObjectName)) {
+                            distance = 8;
+                        } else if (['uranus', 'neptune'].includes(followingObjectName)) {
+                            distance = 12;
+                        }
+                        
+                        // Calculate position on sunlit side - between object and sun, closer to object
+                        const sunDirection = objectToSun.clone(); // Direction from object towards sun
+                        const lateralOffset = new THREE.Vector3(-sunDirection.z, 0, sunDirection.x).normalize().multiplyScalar(distance * 0.3);
+                        const verticalOffset = new THREE.Vector3(0, distance * 0.3, 0);
+                        
+                        optimalCameraPosition = currentFollowedPosition.clone()
+                            .add(sunDirection.multiplyScalar(distance * 0.6)) // Move towards sun from object
+                            .add(lateralOffset)
+                            .add(verticalOffset);
+                    }
+                    
+                    // Smoothly interpolate camera to optimal position
+                    camera.position.lerp(optimalCameraPosition, 0.1);
+                    
+                    // Always look at the followed object in free mode
+                    if (!freeMode) {
+                        camera.lookAt(currentFollowedPosition);
+                    }
+                    
+                    // Update last followed position
+                    lastFollowedPosition.copy(currentFollowedPosition);
+                }
+                
                 // Handle camera modes
                 if (!freeMode) {
                     // Update camera based on current preset (only if not following Earth)
@@ -1098,44 +1678,70 @@
             renderer.render(scene, camera);
         }
         
-        function updateTrail(satellite) {
-            if (!showTrails) {
-                if (satellite.userData.trail) {
-                    satellite.userData.trail.visible = false;
-                }
-                return;
-            }
+        function updateCameraInfo() {
+            const cameraInfoEl = document.getElementById('camera-info');
+            const cameraModeEl = document.getElementById('camera-mode');
             
+            if (followingObject) {
+                const distance = camera.position.length();
+                cameraInfoEl.textContent = `Camera: Following ${followingObjectName.charAt(0).toUpperCase() + followingObjectName.slice(1)}`;
+                cameraModeEl.textContent = `Mode: Follow + Free Look | Distance: ${distance.toFixed(1)}`;
+            } else if (freeMode) {
+                const distance = camera.position.length();
+                cameraInfoEl.textContent = `Camera: Manual (${distance.toFixed(1)}km)`;
+                cameraModeEl.textContent = `Mode: Free | Follow: ${followEarth ? 'Earth' : 'Off'}`;
+            } else {
+                const preset = cameraPresets[currentCameraPreset];
+                cameraInfoEl.textContent = `Camera: ${preset ? preset.name : 'Unknown'}`;
+                cameraModeEl.textContent = `Mode: Preset | Follow: ${followEarth ? 'Earth' : 'Off'}`;
+            }
+        }
+        
+        function updateTrail(satellite) {
             const trail = satellite.userData.trail;
             if (!trail) return;
             
-            trail.visible = true;
+            // Set visibility based on global setting
+            trail.visible = showTrails;
             
-            // Initialize trail positions array if needed
+            // Initialize trail positions if needed
             if (!satellite.userData.trailPositions) {
                 satellite.userData.trailPositions = [];
             }
             
-            const positions = satellite.userData.trailPositions;
-            
-            // Get world position of satellite
+            // Always collect positions for active trails (even when not visible)
+            if (showTrails) {
+                // Get current world position
             const worldPos = new THREE.Vector3();
             satellite.getWorldPosition(worldPos);
             
-            // Add current position to trail
+                // Add position to trail array
+                const positions = satellite.userData.trailPositions;
             positions.push(worldPos.x, worldPos.y, worldPos.z);
             
-            // Limit trail length
-            if (positions.length > maxTrailLength * 3) {
-                positions.splice(0, 3);
-            }
-            
-            // Update trail geometry
-            if (positions.length >= 6) { // Need at least 2 points for a line
-            const trailPositions = new Float32Array(positions);
-            trail.geometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
-            trail.geometry.attributes.position.needsUpdate = true;
-                trail.geometry.setDrawRange(0, positions.length / 3);
+                // Keep trail length manageable
+                if (positions.length > 150) { // 50 points * 3 coordinates
+                    positions.splice(0, 3); // Remove oldest point
+                }
+                
+                // Update the trail geometry
+                if (positions.length >= 6) { // At least 2 points
+                    const positionAttribute = trail.geometry.attributes.position;
+                    
+                    // Copy positions to the buffer
+                    for (let i = 0; i < positions.length && i < positionAttribute.array.length; i++) {
+                        positionAttribute.array[i] = positions[i];
+                    }
+                    
+                    // Update the geometry
+                    positionAttribute.needsUpdate = true;
+                    trail.geometry.setDrawRange(0, Math.floor(positions.length / 3));
+                    
+                    // Debug first trail
+                    if (positions.length === 6) {
+                        console.log(`Trail visible for ${satellite.userData.id}, points: ${Math.floor(positions.length / 3)}`);
+                    }
+                }
             }
         }
         
@@ -1169,11 +1775,6 @@
             if (cameraControls.down) {
                 camera.position.y -= moveSpeed;
             }
-            
-            // Update camera info
-            const distance = camera.position.length();
-            document.getElementById('camera-info').textContent = 
-                `Camera: Manual (${distance.toFixed(1)}km)`;
         }
         
         function failSatellite(satellite) {
@@ -1198,7 +1799,8 @@
         
         // Event handlers
         function onMouseClick(event) {
-            if (autoCamera) return;
+            // Only process clicks if we weren't dragging
+            if (isDragging) return;
             
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1214,20 +1816,30 @@
         }
         
         function onMouseDown(event) {
-            if (autoCamera) return;
             mousePressed = true;
+            isDragging = false;
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
         }
         
         function onMouseUp(event) {
             mousePressed = false;
+            isDragging = false;
         }
         
         function onMouseMove(event) {
-            if (autoCamera || !mousePressed) return;
+            if (!mousePressed) return;
             
-            const deltaX = event.movementX || 0;
-            const deltaY = event.movementY || 0;
+            const deltaX = event.clientX - lastMouseX;
+            const deltaY = event.clientY - lastMouseY;
             
+            // If movement is significant, we're dragging
+            if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                isDragging = true;
+            }
+            
+            if (freeMode) {
+                // Free mode - use existing controls
             cameraRotation.y -= deltaX * 0.005;
             cameraRotation.x -= deltaY * 0.005;
             
@@ -1238,6 +1850,47 @@
             camera.rotation.order = 'YXZ';
             camera.rotation.y = cameraRotation.y;
             camera.rotation.x = cameraRotation.x;
+            } else {
+                // Global solar system spinning
+                globalCameraAngleY -= deltaX * 0.01;
+                globalCameraAngleX -= deltaY * 0.01;
+                
+                // Limit vertical rotation
+                globalCameraAngleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, globalCameraAngleX));
+                
+                updateGlobalCameraPosition();
+            }
+            
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+        }
+        
+        function onMouseWheel(event) {
+            event.preventDefault();
+            
+            if (freeMode) {
+                // Free mode - move camera forward/backward
+                const zoomDirection = new THREE.Vector3(0, 0, -1);
+                zoomDirection.applyQuaternion(camera.quaternion);
+                const zoomAmount = event.deltaY * 0.01;
+                camera.position.add(zoomDirection.multiplyScalar(zoomAmount));
+            } else {
+                // Global zoom
+                const zoomFactor = event.deltaY > 0 ? 1.1 : 0.9;
+                globalCameraDistance *= zoomFactor;
+                globalCameraDistance = Math.max(10, Math.min(800, globalCameraDistance));
+                updateGlobalCameraPosition();
+            }
+        }
+        
+        function updateGlobalCameraPosition() {
+            // Calculate camera position based on spherical coordinates
+            const x = globalCameraDistance * Math.cos(globalCameraAngleX) * Math.cos(globalCameraAngleY);
+            const y = globalCameraDistance * Math.sin(globalCameraAngleX);
+            const z = globalCameraDistance * Math.cos(globalCameraAngleX) * Math.sin(globalCameraAngleY);
+            
+            camera.position.set(x, y, z);
+            camera.lookAt(globalCameraTarget);
         }
         
         function onKeyDown(event) {
@@ -1269,7 +1922,7 @@
         }
         
         function resetCameraView() {
-            setCameraPreset(0); // Reset to Sun view
+            setCameraPreset(2); // Reset to Earth Close view
         }
         
         // Touch event handlers
@@ -1298,14 +1951,14 @@
         function onTouchMove(event) {
             event.preventDefault();
             
-            if (autoCamera) return;
-            
             if (touchCount === 1 && isTouching) {
                 // Single touch - rotate camera
                 const touch = event.touches[0];
                 const deltaX = touch.clientX - touchStart.x;
                 const deltaY = touch.clientY - touchStart.y;
                 
+                if (freeMode) {
+                    // Free mode - use existing controls
                 cameraRotation.y -= deltaX * 0.01;
                 cameraRotation.x -= deltaY * 0.01;
                 
@@ -1316,6 +1969,16 @@
                 camera.rotation.order = 'YXZ';
                 camera.rotation.y = cameraRotation.y;
                 camera.rotation.x = cameraRotation.x;
+                } else {
+                    // Global solar system spinning
+                    globalCameraAngleY -= deltaX * 0.01;
+                    globalCameraAngleX -= deltaY * 0.01;
+                    
+                    // Limit vertical rotation
+                    globalCameraAngleX = Math.max(-Math.PI/2, Math.min(Math.PI/2, globalCameraAngleX));
+                    
+                    updateGlobalCameraPosition();
+                }
                 
                 touchStart.x = touch.clientX;
                 touchStart.y = touch.clientY;
@@ -1329,9 +1992,19 @@
                 );
                 
                 const zoomDelta = (currentPinchDistance - initialPinchDistance) * 0.01;
+                
+                if (freeMode) {
+                    // Free mode - move camera forward/backward
                 const zoomDirection = new THREE.Vector3(0, 0, -1);
                 zoomDirection.applyQuaternion(camera.quaternion);
                 camera.position.add(zoomDirection.multiplyScalar(zoomDelta));
+                } else {
+                    // Global zoom
+                    const zoomFactor = zoomDelta > 0 ? 1.05 : 0.95;
+                    globalCameraDistance *= zoomFactor;
+                    globalCameraDistance = Math.max(20, Math.min(500, globalCameraDistance));
+                    updateGlobalCameraPosition();
+                }
                 
                 initialPinchDistance = currentPinchDistance;
             }
@@ -1411,11 +2084,11 @@
             earthOrbitAngle = 0;
             moonOrbitAngle = 0;
             highlightedSatellites = [];
-            currentCameraPreset = 0;
+            currentCameraPreset = 2;
             
             // Reset Earth and Moon positions
             earthSystem.position.set(50, 0, 0);
-            moon.position.set(3.8, 0, 0);
+                moon.position.set(15, 0, 0); // Updated to match new Moon distance
             earth.rotation.y = 0;
             
             // Reset planet positions and angles
@@ -1486,9 +2159,14 @@
             // Recreate satellites with default configuration
             createSatellites();
             
-            // Reset camera to default Sun view
-            setCameraPreset(0);
+            // Reset camera to default Earth Close view
+            setCameraPreset(2);
             lastEarthPosition.copy(earthSystem.position);
+            
+            // Reset global camera variables
+            globalCameraDistance = 200;
+            globalCameraAngleX = 0;
+            globalCameraAngleY = 0;
             
             // Update all UI elements
             updatePresetButtons();
@@ -1502,6 +2180,11 @@
             
             const trailsBtn = document.querySelector('button[onclick="toggleTrails()"]');
             if (trailsBtn) trailsBtn.textContent = showTrails ? '✨ TRAILS ✓' : '✨ TRAILS';
+            
+            // Ensure trail visibility matches showTrails state
+            trails.forEach(trail => {
+                trail.visible = showTrails;
+            });
             
             const pauseBtn = document.querySelector('button[onclick="togglePause()"]');
             if (pauseBtn) pauseBtn.textContent = '⏸️ PAUSE';
@@ -1526,6 +2209,16 @@
                 ring.visible = showOrbits;
             });
             
+            // Also toggle planetary orbits
+            planetOrbits.forEach(orbit => {
+                orbit.visible = showOrbits;
+            });
+            
+            // Also toggle moon orbits
+            moonOrbits.forEach(orbit => {
+                orbit.visible = showOrbits;
+            });
+            
             // Update button text
             const btn = document.querySelector('button[onclick="toggleOrbits()"]');
             if (btn) {
@@ -1535,8 +2228,17 @@
         
         function toggleTrails() {
             showTrails = !showTrails;
+            
+            // Update all trail visibility
             trails.forEach(trail => {
                 trail.visible = showTrails;
+            });
+            
+            // Also update individual satellite trails
+            satellites.forEach(satellite => {
+                if (satellite.userData.trail) {
+                    satellite.userData.trail.visible = showTrails;
+                }
             });
             
             // Update button text
@@ -1547,8 +2249,61 @@
         }
         
         function applySatelliteConfig() {
+            // Clear all existing satellites and trails completely
+            satellites.forEach(satellite => {
+                // Remove satellite from earthSystem
+                earthSystem.remove(satellite);
+                
+                // Clear trail positions array
+                if (satellite.userData.trailPositions) {
+                    satellite.userData.trailPositions = [];
+                }
+                
+                // Remove trail from scene
+                if (satellite.userData.trail) {
+                    satellite.userData.trail.geometry.dispose();
+                    satellite.userData.trail.material.dispose();
+                    scene.remove(satellite.userData.trail);
+                }
+                
+                // Dispose satellite geometry and materials
+                satellite.traverse((child) => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(material => material.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+            });
+            
+            // Clear trails array and remove from scene
+            trails.forEach(trail => {
+                if (trail.geometry) trail.geometry.dispose();
+                if (trail.material) trail.material.dispose();
+                scene.remove(trail);
+            });
+            
+            // Clear orbital rings
+            orbitalRings.forEach(ring => {
+                earthSystem.remove(ring);
+                if (ring.geometry) ring.geometry.dispose();
+                if (ring.material) ring.material.dispose();
+            });
+            
+            // Reset arrays
+            satellites = [];
+            trails = [];
+            orbitalRings = [];
+            highlightedSatellites = [];
+            
+            // Recreate everything fresh
             createOrbitalRings();
             createSatellites();
+            
+            console.log('Satellite configuration applied - scene reset');
         }
         
         function updateSimulationSpeed() {
@@ -1570,6 +2325,15 @@
             camera.lookAt(newTarget);
             cameraRotation = { x: 0, y: 0 };
             
+            // Update global camera variables to match preset position
+            globalCameraTarget.copy(newTarget);
+            globalCameraDistance = newPos.distanceTo(newTarget);
+            
+            // Calculate angles from position
+            const direction = newPos.clone().sub(newTarget).normalize();
+            globalCameraAngleY = Math.atan2(direction.z, direction.x);
+            globalCameraAngleX = Math.asin(direction.y);
+            
             updateCameraInfo();
             updatePresetButtons();
         }
@@ -1578,8 +2342,14 @@
             freeMode = !freeMode;
             
             if (freeMode) {
-                // Enable manual controls from current position
-                cameraRotation = { x: 0, y: 0 };
+                // Preserve current camera orientation when switching to free mode
+                // Calculate current rotation from camera's current orientation
+                const direction = new THREE.Vector3();
+                camera.getWorldDirection(direction);
+                
+                // Convert direction to euler angles
+                cameraRotation.y = Math.atan2(direction.x, direction.z);
+                cameraRotation.x = Math.asin(-direction.y);
             }
             
             updateCameraInfo();
@@ -1646,16 +2416,12 @@
             }
         }
         
-        function toggleUI() {
-            uiVisible = !uiVisible;
-            const panels = document.querySelectorAll('.ui-panel');
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-tray');
+            const toggle = document.getElementById('sidebar-toggle');
             
-            panels.forEach(panel => {
-                panel.classList.toggle('hidden', !uiVisible);
-            });
-            
-            const toggle = document.getElementById('ui-toggle');
-            toggle.textContent = uiVisible ? '📋' : '👁️';
+            sidebar.classList.toggle('retracted');
+            toggle.textContent = sidebar.classList.contains('retracted') ? '▶' : '◀';
         }
         
         function toggleNegativeLighting() {
@@ -1860,6 +2626,9 @@
             });
         });
     </script>
+    
+    <!-- Theme System -->
+    <script src="themes.js"></script>
     
     <!-- Satellite Solar Simulation API -->
     <script src="sat-sol-sim.js"></script>

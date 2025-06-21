@@ -3,10 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sat-Sol-Sim API Documentation | Professional Solar System Simulation</title>
-    <meta name="description" content="Complete API documentation for the Sat-Sol-Sim solar system simulation with satellite constellation modeling, orbital mechanics, and space visualization.">
+    <title>sat-sol-sim API Documentation | Professional Satellite and Solar System Simulator</title>
+    <meta name="description" content="Complete API documentation for the sat-sol-sim satellite and solar system simulator with satellite constellation modeling, orbital mechanics, and space visualization.">
     
     <style>
+        :root {
+            /* Default Classic Theme Variables */
+            --primary-bg: #001122;
+            --secondary-bg: rgba(0, 17, 34, 0.95);
+            --tertiary-bg: rgba(0, 0, 0, 0.8);
+            --primary-text: #00ff00;
+            --secondary-text: #00ff88;
+            --accent-text: #00ccff;
+            --border-color: #00ff00;
+            --hover-bg: rgba(0, 255, 0, 0.1);
+            --panel-bg: rgba(0, 17, 34, 0.9);
+            --button-bg: #003300;
+            --button-hover: #004400;
+            --button-active: #006600;
+            --input-bg: #003300;
+            --shadow-color: rgba(0, 255, 0, 0.3);
+            --gradient-start: rgba(0, 17, 34, 0.9);
+            --gradient-end: rgba(0, 34, 68, 0.7);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,10 +35,11 @@
         
         body {
             font-family: 'Courier New', monospace;
-            background: #001122;
-            color: #00ff00;
+            background: var(--primary-bg);
+            color: var(--primary-text);
             line-height: 1.6;
             overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .stars {
@@ -39,14 +60,15 @@
         }
         
         header {
-            background: rgba(0, 17, 34, 0.95);
+            background: var(--secondary-bg);
             backdrop-filter: blur(10px);
             position: fixed;
             top: 0;
             width: 100%;
             z-index: 1000;
             padding: 1rem 0;
-            border-bottom: 1px solid #00ff00;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
         
         nav {
@@ -61,9 +83,10 @@
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #00ff88;
+            color: var(--secondary-text);
             text-decoration: none;
-            text-shadow: 0 0 10px #00ff88;
+            text-shadow: 0 0 10px var(--secondary-text);
+            transition: all 0.3s ease;
         }
         
         .nav-links {
@@ -390,7 +413,7 @@
                 <li><a href="index.html">Home</a></li>
                 <li><a href="satellite_simulation.html">Simulation</a></li>
                 <li><a href="satellite-info.html">Satellite Info</a></li>
-                <li><a href="demo/">Demos</a></li>
+                <li><a href="demo/index.html">Demos</a></li>
             </ul>
         </nav>
     </header>
@@ -399,7 +422,7 @@
         <div class="container">
             <div class="header">
                 <h1>📚 API Documentation</h1>
-                <div class="version">Sat-Sol-Sim v1.0.0 | Professional Solar System Simulation</div>
+                <div class="version">sat-sol-sim v1.0.0 | Professional Satellite and Solar System Simulator</div>
             </div>
 
             <div class="nav-menu">
@@ -418,7 +441,7 @@
             <div class="content">
                 <section id="overview" class="section">
                     <h2>🚀 Overview</h2>
-                    <p>The Solar System API provides comprehensive programmatic control over the 3D Solar System Satellite Simulation. This powerful API enables developers to create custom applications, automate simulations, build educational tools, and create immersive space experiences.</p>
+                    <p>The sat-sol-sim API provides comprehensive programmatic control over the 3D satellite and solar system simulator. This powerful API enables developers to create custom applications, automate simulations, build educational tools, and create immersive space experiences.</p>
                     
                     <h3>Key Features</h3>
                     <ul>
@@ -1143,7 +1166,7 @@ SolarSystemAPI.events.on('initialized', () => monitor.start());
             </div>
 
             <div class="footer">
-                <p>🌟 Solar System API v1.0.0 | Made with ❤️ for space exploration</p>
+                <p>🌟 sat-sol-sim API v1.0.0 | Made with ❤️ for space exploration</p>
                 <p>
                     <a href="sat-sol-sim.js" style="color: white; margin: 0 10px;">📄 Full API</a>
                     <a href="sat-sol-sim.min.js" style="color: white; margin: 0 10px;">📦 Minified</a>
@@ -1152,5 +1175,7 @@ SolarSystemAPI.events.on('initialized', () => monitor.start());
             </div>
         </div>
     </div>
+    
+    <script src="themes.js"></script>
 </body>
 </html> 

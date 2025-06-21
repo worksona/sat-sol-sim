@@ -3,16 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System API - Basic Control Demo</title>
+    <title>sat-sol-sim API - Basic Control Demo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        :root {
+            /* Default Classic Theme Variables */
+            --primary-bg: #001122;
+            --primary-text: #00ff00;
+            --secondary-text: #00ff88;
+            --border-color: #00ff00;
+            --panel-bg: rgba(0, 0, 0, 0.95);
+            --button-bg: #003300;
+            --button-hover: #004400;
+            --button-active: #006600;
+        }
+
         body {
             font-family: 'Courier New', monospace;
-            background: #001122;
-            color: #00ff00;
+            background: var(--primary-bg);
+            color: var(--primary-text);
             margin: 0;
             padding: 0;
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .demo-overlay {
@@ -22,12 +35,13 @@
             width: 350px;
             max-height: calc(100vh - 20px);
             overflow-y: auto;
-            background: rgba(0, 0, 0, 0.95);
-            border: 1px solid #00ff00;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
             z-index: 1000;
             backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
         
         .demo-header {
@@ -67,9 +81,9 @@
         }
         
         button {
-            background: #003300;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            background: var(--button-bg);
+            color: var(--primary-text);
+            border: 1px solid var(--border-color);
             padding: 6px 10px;
             border-radius: 4px;
             cursor: pointer;
@@ -80,12 +94,12 @@
         }
         
         button:hover {
-            background: #004400;
-            box-shadow: 0 0 8px #00ff00;
+            background: var(--button-hover);
+            box-shadow: 0 0 8px var(--border-color);
         }
         
         button:active {
-            background: #006600;
+            background: var(--button-active);
         }
         
         .status-box {
@@ -445,7 +459,7 @@
             // Try to load Earth texture, fallback to simple material
             const textureLoader = new THREE.TextureLoader();
             textureLoader.load(
-                'earth-texture.jpg',
+                '../img/earth-texture.jpg',
                 function(texture) {
                     const earthMaterial = new THREE.MeshPhongMaterial({ map: texture });
                     earth = new THREE.Mesh(earthGeometry, earthMaterial);
@@ -1084,5 +1098,7 @@
             }
         });
     </script>
+    
+    <script src="../themes.js"></script>
 </body>
 </html>

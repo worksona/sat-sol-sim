@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voyager Explorer - Interactive 3D Journey</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%); color: #00ff00; overflow: hidden; height: 100vh; }
+        #canvas-container { position: relative; width: 100vw; height: 100vh; }
+        #voyager-info-panel { position: fixed; left: 20px; top: 20px; width: 400px; height: calc(100vh - 40px); background: rgba(0, 0, 0, 0.9); border: 2px solid #00ccff; border-radius: 10px; padding: 20px; overflow-y: auto; z-index: 1000; transform: translateX(-420px); transition: transform 0.3s ease; }
+        #voyager-info-panel.open { transform: translateX(0); }
+        #panel-toggle { position: fixed; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0, 204, 255, 0.8); color: #000; border: none; padding: 15px 8px; border-radius: 0 10px 10px 0; cursor: pointer; z-index: 1001; font-weight: bold; writing-mode: vertical-lr; text-orientation: mixed; }
+        #panel-toggle:hover { background: rgba(0, 255, 136, 0.9); }
+        #space-map-card { position: fixed; top: 20px; right: 20px; width: 300px; height: 200px; background: rgba(0, 0, 0, 0.95); border: 2px solid #00ff88; border-radius: 8px; z-index: 1000; overflow: hidden; }
+        #space-map-canvas { width: 100%; height: 100%; display: block; }
+        #map-controls { position: absolute; bottom: 5px; left: 5px; right: 5px; display: flex; gap: 3px; justify-content: center; }
+        .map-control-btn { background: rgba(0, 255, 136, 0.3); border: 1px solid #00ff88; color: #00ff88; padding: 2px 4px; font-size: 8px; border-radius: 3px; cursor: pointer; transition: all 0.2s; }
+        .map-control-btn:hover { background: rgba(0, 255, 136, 0.6); }
+        .map-control-btn.active { background: rgba(0, 255, 136, 0.8); box-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+        .voyager-section { margin-bottom: 30px; padding: 20px; border: 1px solid #00ff88; border-radius: 8px; background: rgba(0, 255, 136, 0.05); }
+        .voyager-section h2 { color: #00ccff; text-shadow: 0 0 10px #00ccff; margin-bottom: 15px; font-size: 1.5rem; }
+        .voyager-section h3 { color: #00ff88; margin-bottom: 10px; font-size: 1.2rem; }
+        .mission-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .stat-item { background: rgba(0, 255, 0, 0.1); padding: 10px; border-radius: 5px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #00ff88; text-shadow: 0 0 5px #00ff88; }
+        .stat-label { font-size: 0.9rem; color: #00ccff; }
+        .trajectory-map { background: rgba(0, 0, 0, 0.8); border: 1px solid #00ff00; border-radius: 5px; padding: 15px; margin: 15px 0; min-height: 200px; }
+        .trajectory-timeline { list-style: none; padding-left: 20px; border-left: 2px solid #00ccff; }
+        .trajectory-timeline li { padding: 10px 0; padding-left: 20px; position: relative; color: #00ff00; }
+        .trajectory-timeline li::before { content: '●'; position: absolute; left: -8px; color: #00ff88; font-size: 1.2rem; }
+        .trajectory-timeline .year { color: #00ccff; font-weight: bold; }
+        .achievement-list { list-style: none; margin: 10px 0; }
+        .achievement-list li { padding: 5px 0; padding-left: 20px; position: relative; color: #00ff00; }
+        .achievement-list li::before { content: '★'; position: absolute; left: 0; color: #FFD700; }
+        .controls-section { background: rgba(0, 0, 0, 0.9); border: 1px solid #ff6b6b; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .controls-section h3 { color: #ff6b6b; margin-bottom: 10px; }
+        .control-button { background: rgba(0, 255, 136, 0.2); border: 1px solid #00ff88; color: #00ff88; padding: 8px 15px; margin: 5px; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+        .control-button:hover { background: rgba(0, 255, 136, 0.4); text-shadow: 0 0 5px #00ff88; }
+        .control-button.active { background: rgba(0, 255, 136, 0.6); box-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+        .control-button:disabled { opacity: 0.5; cursor: not-allowed; background: rgba(128, 128, 128, 0.2); border-color: #666; color: #666; }
+        #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ff88; font-size: 1.5rem; text-shadow: 0 0 10px #00ff88; z-index: 2000; }
+        .distance-display { position: fixed; bottom: 20px; right: 20px; background: rgba(0, 0, 0, 0.8); border: 1px solid #00ccff; border-radius: 5px; padding: 15px; color: #00ccff; }
+        .distance-display h4 { margin-bottom: 10px; text-align: center; }
+        .distance-value { font-size: 1.2rem; font-weight: bold; color: #00ff88; text-shadow: 0 0 5px #00ff88; }
+        .scrollable { scrollbar-width: thin; scrollbar-color: #00ff88 #000; }
+        .scrollable::-webkit-scrollbar { width: 8px; }
+        .scrollable::-webkit-scrollbar-track { background: #000; }
+        .scrollable::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 10px; }
+        .app-header { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 999; text-align: center; pointer-events: none; }
+        .app-title { font-size: 1.5rem; font-weight: bold; color: #00ff88; text-shadow: 0 0 10px #00ff88; margin-bottom: 2px; }
+        .app-subtitle { font-size: 0.9rem; color: #00ccff; opacity: 0.8; text-shadow: 0 0 5px #00ccff; }
+        .space-map-title { position: absolute; top: 5px; left: 5px; right: 5px; text-align: center; font-size: 8px; color: #00ff88; opacity: 0.8; pointer-events: none; }
+        @media (max-width: 768px) { #voyager-info-panel { width: 90vw; transform: translateX(-100vw); } #panel-toggle { writing-mode: horizontal-tb; text-orientation: unset; padding: 8px 15px; left: 50%; top: 20px; transform: translateX(-50%); } .app-header { top: 15px; } .app-title { font-size: 1.2rem; } .app-subtitle { font-size: 0.8rem; } }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+</head>
+<body>
+    <div id="loading">Initializing Voyager Explorer...</div>
+    
+    <!-- App Header -->
+    <div class="app-header">
+        <div class="app-title">🚀 Voyager Explorer</div>
+        <div class="app-subtitle">Interactive 3D Spacecraft Journey</div>
+    </div>
+    
+    <button id="panel-toggle">VOYAGER INFO</button>
+    
+    <!-- Space Map Card -->
+    <div id="space-map-card">
+        <div class="space-map-title">🛰️ Voyager Flight Paths & Navigation</div>
+        <canvas id="space-map-canvas"></canvas>
+        <div id="map-controls">
+            <button class="map-control-btn" onclick="mapFocusVoyager1()" title="Focus Voyager 1">V1</button>
+            <button class="map-control-btn" onclick="mapFocusVoyager2()" title="Focus Voyager 2">V2</button>
+            <button class="map-control-btn" onclick="mapViewSolarSystem()" title="Solar System View">🌌</button>
+            <button class="map-control-btn" onclick="mapToggleTrajectories()" title="Toggle Trajectories">📍</button>
+        </div>
+    </div>
+    
+    <div id="voyager-info-panel" class="scrollable">
+        <div class="voyager-section">
+            <h2>🚀 Voyager 1</h2>
+            <div class="mission-stats">
+                <div class="stat-item"><div class="stat-value">159.2</div><div class="stat-label">AU from Sun</div></div>
+                <div class="stat-item"><div class="stat-value">47</div><div class="stat-label">Years in Space</div></div>
+                <div class="stat-item"><div class="stat-value">2012</div><div class="stat-label">Entered Interstellar</div></div>
+                <div class="stat-item"><div class="stat-value">Active</div><div class="stat-label">Current Status</div></div>
+            </div>
+            <h3>🛰️ Mission Highlights</h3>
+            <ul class="achievement-list">
+                <li>First spacecraft to cross the heliopause</li>
+                <li>Discovered Io's active volcanism</li>
+                <li>Revealed Jupiter's ring system</li>
+                <li>Detailed Saturn system exploration</li>
+                <li>Carries the Golden Record</li>
+            </ul>
+            <h3>📍 Trajectory Timeline</h3>
+            <div class="trajectory-map">
+                <ul class="trajectory-timeline">
+                    <li><span class="year">1977:</span> Launch from Earth</li>
+                    <li><span class="year">1979:</span> Jupiter flyby - volcanic Io discovered</li>
+                    <li><span class="year">1980:</span> Saturn flyby - ring details revealed</li>
+                    <li><span class="year">1990:</span> "Pale Blue Dot" photograph</li>
+                    <li><span class="year">2012:</span> Crossed heliopause - interstellar space</li>
+                    <li><span class="year">2024:</span> Still transmitting from deep space</li>
+                </ul>
+            </div>
+        </div>
+        <div class="voyager-section">
+            <h2>🌌 Voyager 2</h2>
+            <div class="mission-stats">
+                <div class="stat-item"><div class="stat-value">132.8</div><div class="stat-label">AU from Sun</div></div>
+                <div class="stat-item"><div class="stat-value">47</div><div class="stat-label">Years in Space</div></div>
+                <div class="stat-item"><div class="stat-value">2018</div><div class="stat-label">Entered Interstellar</div></div>
+                <div class="stat-item"><div class="stat-value">Active</div><div class="stat-label">Current Status</div></div>
+            </div>
+            <h3>🛰️ Mission Highlights</h3>
+            <ul class="achievement-list">
+                <li>Only craft to visit all four gas giants</li>
+                <li>Discovered 11 new moons of Uranus</li>
+                <li>Found 6 new moons of Neptune</li>
+                <li>Revealed Uranus's magnetic field tilt</li>
+                <li>Discovered Neptune's Great Dark Spot</li>
+            </ul>
+            <h3>📍 Trajectory Timeline</h3>
+            <div class="trajectory-map">
+                <ul class="trajectory-timeline">
+                    <li><span class="year">1977:</span> Launch from Earth (16 days before V1)</li>
+                    <li><span class="year">1979:</span> Jupiter flyby - Great Red Spot details</li>
+                    <li><span class="year">1981:</span> Saturn flyby - spoked ring structure</li>
+                    <li><span class="year">1986:</span> Uranus flyby - tilted magnetic field</li>
+                    <li><span class="year">1989:</span> Neptune flyby - Great Dark Spot</li>
+                    <li><span class="year">2018:</span> Crossed heliopause - interstellar space</li>
+                </ul>
+            </div>
+        </div>
+        <div class="voyager-section">
+            <h2>📡 Current Mission Status</h2>
+            <p style="color: #00ff00; margin-bottom: 15px;">Both Voyager spacecraft continue to operate and transmit scientific data from interstellar space, making them humanity's most distant active representatives.</p>
+            <h3>🔬 Active Instruments</h3>
+            <ul style="color: #00ccff; margin-left: 20px;">
+                <li>Cosmic Ray Subsystem (CRS)</li>
+                <li>Low-Energy Charged Particle (LECP)</li>
+                <li>Magnetometer (MAG)</li>
+                <li>Plasma Wave Subsystem (PWS)</li>
+            </ul>
+            <h3>⚡ Power Status</h3>
+            <p style="color: #ffaa00; margin: 10px 0;">Voyager 1: ~249 watts remaining</p>
+            <p style="color: #ffaa00; margin: 10px 0;">Voyager 2: ~258 watts remaining</p>
+            <p style="color: #00ff00; font-size: 0.9rem;">Power decreases by ~4 watts per year. Expected operational until ~2030.</p>
+        </div>
+        <div class="voyager-section">
+            <h2>🌟 The Golden Records</h2>
+            <p style="color: #FFD700; margin-bottom: 15px;">Each Voyager carries a Golden Record - a time capsule intended for any intelligent extraterrestrial life form who might find it.</p>
+            <h3>📀 Record Contents</h3>
+            <ul style="color: #00ff00; margin-left: 20px;">
+                <li>115 images of Earth and its lifeforms</li>
+                <li>Natural sounds: wind, rain, surf, animals</li>
+                <li>Music from different cultures and eras</li>
+                <li>Spoken greetings in 55 languages</li>
+                <li>Mathematical and physical constants</li>
+                <li>Instructions for playback</li>
+            </ul>
+        </div>
+        
+        <div class="controls-section">
+            <h3>🎛️ Model Controls</h3>
+            <button class="control-button" id="model-toggle" onclick="toggleVoyagerModel()">⏳ Loading 3D Model...</button>
+            <div style="font-size: 9px; margin-top: 5px; color: #888;">Switch between high-detail and simple model</div>
+        </div>
+    </div>
+    <div class="distance-display">
+        <h4>🛰️ Real-time Distance</h4>
+        <div>Voyager 1: <span class="distance-value" id="v1-distance">159.2 AU</span></div>
+        <div>Voyager 2: <span class="distance-value" id="v2-distance">132.8 AU</span></div>
+        <div style="font-size: 0.8rem; margin-top: 5px; color: #888;">1 AU = 150M km</div>
+    </div>
+    <div id="canvas-container"></div>
+    <script>
+        // Main scene for Voyager model exploration
+        let mainScene, mainCamera, mainRenderer, currentVoyager;
+        
+        // Mini map scene for space navigation
+        let mapScene, mapCamera, mapRenderer, mapSun, mapPlanets = [];
+        let mapVoyager1, mapVoyager2, mapTrajectoryLines = [], mapShowTrajectories = true;
+        
+        // Model management
+        let usingGLBModel = false;
+        let loadedGLBModel = null;
+        let gltfLoader = null;
+        let dracoLoader = null;
+        let glbLights = []; // Additional lights for GLB model
+        
+        let animationId;
+
+        function init() {
+            // Initialize DRACO loader
+            dracoLoader = new THREE.DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            dracoLoader.setDecoderConfig({ type: 'js' });
+            
+            // Initialize GLTF loader with DRACO support
+            gltfLoader = new THREE.GLTFLoader();
+            gltfLoader.setDRACOLoader(dracoLoader);
+            
+            // Update loading text
+            document.getElementById('loading').textContent = 'Initializing Voyager Explorer...';
+            
+            initMainScene();
+            initMapScene();
+            
+            // Don't hide loading yet - let autoLoadGLBModel handle it
+            // Start animation after both scenes are initialized
+            animate();
+        }
+
+        function initMainScene() {
+            // Main scene setup for detailed Voyager exploration
+            mainScene = new THREE.Scene();
+            mainScene.background = new THREE.Color(0x000011);
+            
+            mainCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            mainCamera.position.set(8, 3, 8); // Better initial position for GLB model
+            
+            mainRenderer = new THREE.WebGLRenderer({ antialias: true });
+            mainRenderer.setSize(window.innerWidth, window.innerHeight);
+            mainRenderer.shadowMap.enabled = true;
+            mainRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(mainRenderer.domElement);
+            
+            // Lighting for main scene
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            mainScene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            mainScene.add(directionalLight);
+            
+            // Create stars backdrop
+            createMainStarField();
+            
+            // Main scene controls
+            createMainControls();
+            
+            // Auto-load GLB model on initialization
+            autoLoadGLBModel();
+        }
+
+        function initMapScene() {
+            // Mini map scene setup
+            mapScene = new THREE.Scene();
+            mapScene.background = new THREE.Color(0x000008);
+            
+            mapCamera = new THREE.PerspectiveCamera(60, 300/200, 0.1, 1000);
+            mapCamera.position.set(0, 120, 30); // Top-down view with slight angle
+            mapCamera.lookAt(0, 0, 0); // Look at solar system center
+            
+            mapRenderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('space-map-canvas'),
+                antialias: true 
+            });
+            mapRenderer.setSize(300, 200);
+            
+            // Create mini solar system
+            createMapSun();
+            createMapPlanets();
+            createMapVoyagers();
+            createMapTrajectories();
+            createMapStarField();
+            
+            const mapAmbientLight = new THREE.AmbientLight(0x404040, 0.3);
+            mapScene.add(mapAmbientLight);
+            
+            // Map controls
+            createMapControls();
+        }
+
+        function createDetailedVoyagerModel() {
+            const voyager = new THREE.Group();
+            
+            // Main body - more detailed
+            const bodyGeometry = new THREE.BoxGeometry(2, 1, 1.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x888888,
+                shininess: 30
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            voyager.add(body);
+            
+            // High-gain antenna dish
+            const dishGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.15, 32);
+            const dishMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xdddddd,
+                shininess: 50
+            });
+            const dish = new THREE.Mesh(dishGeometry, dishMaterial);
+            dish.position.set(0, 1, 0);
+            dish.castShadow = true;
+            dish.receiveShadow = true;
+            voyager.add(dish);
+            
+            // Magnetometer boom
+            const boomGeometry = new THREE.CylinderGeometry(0.05, 0.05, 6, 12);
+            const boomMaterial = new THREE.MeshPhongMaterial({ color: 0x444444 });
+            
+            const boom1 = new THREE.Mesh(boomGeometry, boomMaterial);
+            boom1.rotation.z = Math.PI / 2;
+            boom1.position.x = 3;
+            boom1.castShadow = true;
+            voyager.add(boom1);
+            
+            const boom2 = new THREE.Mesh(boomGeometry, boomMaterial);
+            boom2.rotation.z = -Math.PI / 2;
+            boom2.position.x = -3;
+            boom2.castShadow = true;
+            voyager.add(boom2);
+            
+            // RTG (Radioisotope Thermoelectric Generator)
+            const rtgGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.5, 12);
+            const rtgMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+            const rtg = new THREE.Mesh(rtgGeometry, rtgMaterial);
+            rtg.position.set(4, 0, 0);
+            rtg.castShadow = true;
+            rtg.receiveShadow = true;
+            voyager.add(rtg);
+            
+            // Science instruments platform
+            const instGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.3);
+            const instMaterial = new THREE.MeshPhongMaterial({ color: 0x555555 });
+            const instruments = new THREE.Mesh(instGeometry, instMaterial);
+            instruments.position.set(0, 0, 1);
+            instruments.castShadow = true;
+            instruments.receiveShadow = true;
+            voyager.add(instruments);
+            
+            // Golden record
+            const recordGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.02, 32);
+            const recordMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFFD700,
+                shininess: 100
+            });
+            const record = new THREE.Mesh(recordGeometry, recordMaterial);
+            record.position.set(-0.5, 0, 0.8);
+            record.rotation.x = Math.PI / 2;
+            record.castShadow = true;
+            voyager.add(record);
+            
+            return voyager;
+        }
+
+        function createMainControls() {
+            let mouseDown = false, mouseX = 0, mouseY = 0;
+            let targetRotationX = 0, targetRotationY = 0, rotationX = 0, rotationY = 0;
+            
+            mainRenderer.domElement.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                mouseDown = true;
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            });
+            
+            mainRenderer.domElement.addEventListener('mousemove', (event) => {
+                if (!mouseDown) return;
+                const deltaX = event.clientX - mouseX;
+                const deltaY = event.clientY - mouseY;
+                targetRotationX -= deltaY * 0.01;
+                targetRotationY -= deltaX * 0.01;
+                mouseX = event.clientX;
+                mouseY = event.clientY;
+            });
+            
+            mainRenderer.domElement.addEventListener('mouseup', () => { mouseDown = false; });
+            
+            mainRenderer.domElement.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                const scale = event.deltaY > 0 ? 1.1 : 0.9;
+                mainCamera.position.multiplyScalar(scale);
+                
+                // Constrain camera distance
+                const distance = mainCamera.position.length();
+                if (distance < 2) mainCamera.position.normalize().multiplyScalar(2);
+                if (distance > 20) mainCamera.position.normalize().multiplyScalar(20);
+            });
+            
+            mainScene.userData.updateCamera = function() {
+                rotationX += (targetRotationX - rotationX) * 0.05;
+                rotationY += (targetRotationY - rotationY) * 0.05;
+                
+                const distance = mainCamera.position.length();
+                mainCamera.position.x = Math.cos(rotationY) * Math.cos(rotationX) * distance;
+                mainCamera.position.y = Math.sin(rotationX) * distance;
+                mainCamera.position.z = Math.sin(rotationY) * Math.cos(rotationX) * distance;
+                mainCamera.lookAt(0, 0, 0);
+            };
+        }
+
+        function createStarTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            
+            // Create radial gradient for soft glow effect
+            const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 64, 64);
+            
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createMainStarField() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starPositions = [];
+            const starSizes = [];
+            const starColors = [];
+            
+            for (let i = 0; i < 800; i++) {
+                // Random positions
+                starPositions.push(
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500
+                );
+                
+                // Varied star sizes for depth
+                starSizes.push(Math.random() * 3 + 0.5);
+                
+                // Varied star colors (white to slightly blue/yellow)
+                const colorVariation = Math.random();
+                if (colorVariation < 0.7) {
+                    starColors.push(1, 1, 1); // White
+                } else if (colorVariation < 0.85) {
+                    starColors.push(0.9, 0.9, 1); // Slightly blue
+                } else {
+                    starColors.push(1, 1, 0.8); // Slightly yellow
+                }
+            }
+            
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+            starGeometry.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
+            starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+            
+            // Create soft circular glow texture for stars
+            const starTexture = createStarTexture();
+            
+            const starMaterial = new THREE.PointsMaterial({ 
+                map: starTexture,
+                transparent: true, 
+                opacity: 0.9,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true,
+                alphaTest: 0.01
+            });
+            
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            
+            // Add subtle twinkling animation
+            stars.userData = {
+                originalOpacity: 0.9,
+                twinkleSpeed: 0.002,
+                twinklePhase: Math.random() * Math.PI * 2
+            };
+            
+            mainScene.add(stars);
+            
+            // Store reference for animation
+            if (!mainScene.userData.stars) mainScene.userData.stars = [];
+            mainScene.userData.stars.push(stars);
+        }
+
+        // Mini map functions
+        function createMapSun() {
+            const sunGeometry = new THREE.SphereGeometry(2, 16, 16);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            mapSun = new THREE.Mesh(sunGeometry, sunMaterial);
+            mapScene.add(mapSun);
+            
+            const sunLight = new THREE.PointLight(0xffffff, 1, 500);
+            sunLight.position.set(0, 0, 0);
+            mapScene.add(sunLight);
+        }
+
+        function createMapPlanets() {
+            const planetData = [
+                { name: 'Mercury', size: 0.3, distance: 8, color: 0x8c7853 },
+                { name: 'Venus', size: 0.4, distance: 12, color: 0xffc649 },
+                { name: 'Earth', size: 0.5, distance: 18, color: 0x6b93d6 },
+                { name: 'Mars', size: 0.4, distance: 25, color: 0xcd5c5c },
+                { name: 'Jupiter', size: 1.5, distance: 40, color: 0xd8ca9d },
+                { name: 'Saturn', size: 1.2, distance: 55, color: 0xfad5a5 },
+                { name: 'Uranus', size: 0.8, distance: 75, color: 0x4fd0e3 },
+                { name: 'Neptune', size: 0.7, distance: 95, color: 0x4b70dd }
+            ];
+            
+            planetData.forEach(data => {
+                const geometry = new THREE.SphereGeometry(data.size, 8, 8);
+                const material = new THREE.MeshPhongMaterial({ color: data.color });
+                const planet = new THREE.Mesh(geometry, material);
+                planet.position.x = data.distance;
+                planet.userData = { distance: data.distance, name: data.name };
+                mapPlanets.push(planet);
+                mapScene.add(planet);
+                
+                // Orbit rings
+                const orbitGeometry = new THREE.RingGeometry(data.distance - 0.1, data.distance + 0.1, 32);
+                const orbitMaterial = new THREE.MeshBasicMaterial({ 
+                    color: data.color, 
+                    transparent: true, 
+                    opacity: 0.1, 
+                    side: THREE.DoubleSide 
+                });
+                const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                mapScene.add(orbit);
+            });
+        }
+
+        function createMapVoyagers() {
+            mapVoyager1 = createSimpleVoyagerModel();
+            mapVoyager1.position.set(150, 25, 50);
+            mapVoyager1.userData = { name: 'Voyager 1' };
+            mapScene.add(mapVoyager1);
+            
+            mapVoyager2 = createSimpleVoyagerModel();
+            mapVoyager2.position.set(130, -15, 75);
+            mapVoyager2.userData = { name: 'Voyager 2' };
+            mapScene.add(mapVoyager2);
+        }
+
+        function createSimpleVoyagerModel() {
+            const voyager = new THREE.Group();
+            const bodyGeometry = new THREE.BoxGeometry(0.4, 0.2, 0.3);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            voyager.add(body);
+            
+            const dishGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.03, 8);
+            const dishMaterial = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+            const dish = new THREE.Mesh(dishGeometry, dishMaterial);
+            dish.position.set(0, 0.15, 0);
+            voyager.add(dish);
+            
+            return voyager;
+        }
+
+        function createMapTrajectories() {
+            const v1Points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(40, 5, 10),
+                new THREE.Vector3(55, 10, 20),
+                new THREE.Vector3(150, 25, 50)
+            ];
+            const v1Geometry = new THREE.BufferGeometry().setFromPoints(v1Points);
+            const v1Material = new THREE.LineBasicMaterial({ color: 0xFFD700 });
+            const v1Trajectory = new THREE.Line(v1Geometry, v1Material);
+            mapTrajectoryLines.push(v1Trajectory);
+            mapScene.add(v1Trajectory);
+            
+            const v2Points = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(40, -3, 8),
+                new THREE.Vector3(55, -5, 18),
+                new THREE.Vector3(75, -10, 40),
+                new THREE.Vector3(95, -12, 60),
+                new THREE.Vector3(130, -15, 75)
+            ];
+            const v2Geometry = new THREE.BufferGeometry().setFromPoints(v2Points);
+            const v2Material = new THREE.LineBasicMaterial({ color: 0x00BFFF });
+            const v2Trajectory = new THREE.Line(v2Geometry, v2Material);
+            mapTrajectoryLines.push(v2Trajectory);
+            mapScene.add(v2Trajectory);
+        }
+
+        function createMapStarField() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starPositions = [];
+            const starSizes = [];
+            const starColors = [];
+            
+            for (let i = 0; i < 300; i++) {
+                // Random positions
+                starPositions.push(
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500
+                );
+                
+                // Smaller sizes for mini map
+                starSizes.push(Math.random() * 1.5 + 0.3);
+                
+                // Varied star colors
+                const colorVariation = Math.random();
+                if (colorVariation < 0.7) {
+                    starColors.push(1, 1, 1); // White
+                } else if (colorVariation < 0.85) {
+                    starColors.push(0.9, 0.9, 1); // Slightly blue
+                } else {
+                    starColors.push(1, 1, 0.8); // Slightly yellow
+                }
+            }
+            
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+            starGeometry.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
+            starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+            
+            // Use the same soft star texture
+            const starTexture = createStarTexture();
+            
+            const starMaterial = new THREE.PointsMaterial({ 
+                map: starTexture,
+                transparent: true, 
+                opacity: 0.7,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true,
+                alphaTest: 0.01
+            });
+            
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            
+            // Add subtle twinkling animation
+            stars.userData = {
+                originalOpacity: 0.7,
+                twinkleSpeed: 0.0015,
+                twinklePhase: Math.random() * Math.PI * 2
+            };
+            
+            mapScene.add(stars);
+            
+            // Store reference for animation
+            if (!mapScene.userData.stars) mapScene.userData.stars = [];
+            mapScene.userData.stars.push(stars);
+        }
+
+        function createMapControls() {
+            let mapMouseDown = false, mapMouseX = 0, mapMouseY = 0;
+            let mapTargetRotationX = 0, mapTargetRotationY = 0;
+            let mapRotationX = 0, mapRotationY = 0;
+            
+            const mapCanvas = document.getElementById('space-map-canvas');
+            
+            mapCanvas.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                mapMouseDown = true;
+                mapMouseX = event.clientX;
+                mapMouseY = event.clientY;
+            });
+            
+            mapCanvas.addEventListener('mousemove', (event) => {
+                if (!mapMouseDown) return;
+                const deltaX = event.clientX - mapMouseX;
+                const deltaY = event.clientY - mapMouseY;
+                mapTargetRotationX -= deltaY * 0.01;
+                mapTargetRotationY -= deltaX * 0.01;
+                mapMouseX = event.clientX;
+                mapMouseY = event.clientY;
+            });
+            
+            mapCanvas.addEventListener('mouseup', () => { mapMouseDown = false; });
+            
+            mapCanvas.addEventListener('wheel', (event) => {
+                event.preventDefault();
+                const scale = event.deltaY > 0 ? 1.1 : 0.9;
+                mapCamera.position.multiplyScalar(scale);
+            });
+            
+            mapScene.userData.updateCamera = function() {
+                mapRotationX += (mapTargetRotationX - mapRotationX) * 0.05;
+                mapRotationY += (mapTargetRotationY - mapRotationY) * 0.05;
+                
+                const distance = mapCamera.position.length();
+                mapCamera.position.x = Math.cos(mapRotationY) * Math.cos(mapRotationX) * distance;
+                mapCamera.position.y = Math.sin(mapRotationX) * distance;
+                mapCamera.position.z = Math.sin(mapRotationY) * Math.cos(mapRotationX) * distance;
+                mapCamera.lookAt(0, 0, 0);
+            };
+        }
+
+        // Enhanced lighting for GLB model
+        function createGLBLighting() {
+            // Clear existing GLB lights
+            glbLights.forEach(light => mainScene.remove(light));
+            glbLights = [];
+            
+            // Key light (main illumination from front-right)
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            keyLight.position.set(10, 10, 10);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 2048;
+            keyLight.shadow.mapSize.height = 2048;
+            mainScene.add(keyLight);
+            glbLights.push(keyLight);
+            
+            // Fill light (softer light from left to reduce harsh shadows)
+            const fillLight = new THREE.DirectionalLight(0xaaccff, 0.6);
+            fillLight.position.set(-8, 5, 8);
+            mainScene.add(fillLight);
+            glbLights.push(fillLight);
+            
+            // Back light (rim lighting for separation)
+            const backLight = new THREE.DirectionalLight(0xffffaa, 0.4);
+            backLight.position.set(-5, -5, -10);
+            mainScene.add(backLight);
+            glbLights.push(backLight);
+            
+            // Top light (illuminates from above)
+            const topLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            topLight.position.set(0, 15, 0);
+            mainScene.add(topLight);
+            glbLights.push(topLight);
+            
+            // Point lights for detail illumination
+            const pointLight1 = new THREE.PointLight(0xffffff, 0.8, 20);
+            pointLight1.position.set(5, 3, 5);
+            mainScene.add(pointLight1);
+            glbLights.push(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0xaaffff, 0.6, 15);
+            pointLight2.position.set(-3, 2, -3);
+            mainScene.add(pointLight2);
+            glbLights.push(pointLight2);
+            
+            // Increase ambient light for GLB model
+            const ambientLight = mainScene.children.find(child => child.type === 'AmbientLight');
+            if (ambientLight) {
+                ambientLight.intensity = 0.8; // Increased from 0.4
+            }
+        }
+        
+        function removeGLBLighting() {
+            // Remove GLB-specific lights
+            glbLights.forEach(light => mainScene.remove(light));
+            glbLights = [];
+            
+            // Reset ambient light to normal
+            const ambientLight = mainScene.children.find(child => child.type === 'AmbientLight');
+            if (ambientLight) {
+                ambientLight.intensity = 0.4; // Back to original
+            }
+        }
+
+        // Auto-load GLB model on startup
+        function autoLoadGLBModel() {
+            // Update button to show loading state
+            const toggleBtn = document.getElementById('model-toggle');
+            toggleBtn.textContent = '⏳ Loading 3D Model...';
+            toggleBtn.disabled = true;
+            
+            // Keep loading indicator visible
+            document.getElementById('loading').textContent = 'Loading Voyager 3D Model...';
+            
+            loadGLBModel().then((glbModel) => {
+                // Add GLB model
+                currentVoyager = glbModel.clone();
+                currentVoyager.position.set(0, 0, 0);
+                mainScene.add(currentVoyager);
+                
+                // Enable enhanced lighting for GLB model
+                createGLBLighting();
+                
+                // Set state and UI
+                usingGLBModel = true;
+                toggleBtn.textContent = '🔧 Use Simple Model';
+                toggleBtn.disabled = false;
+                toggleBtn.classList.add('active');
+                
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+                
+                console.log('Auto-loaded GLB model with enhanced lighting');
+            }).catch((error) => {
+                console.error('Failed to auto-load GLB model, falling back to procedural:', error);
+                
+                // Fallback to procedural model
+                currentVoyager = createDetailedVoyagerModel();
+                currentVoyager.position.set(0, 0, 0);
+                mainScene.add(currentVoyager);
+                
+                // Reset UI state
+                usingGLBModel = false;
+                toggleBtn.textContent = '📦 Load High-Detail Model';
+                toggleBtn.disabled = false;
+                toggleBtn.classList.remove('active');
+                
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+                
+                console.log('Fallback to procedural model due to GLB loading error');
+            });
+        }
+
+        // Model management functions
+        function loadGLBModel() {
+            return new Promise((resolve, reject) => {
+                if (loadedGLBModel) {
+                    resolve(loadedGLBModel);
+                    return;
+                }
+                
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').textContent = 'Loading Voyager 3D Model...';
+                
+                gltfLoader.load(
+                    './models/Voyager.glb',
+                    function (gltf) {
+                        console.log('GLB model loaded successfully');
+                        loadedGLBModel = gltf.scene.clone();
+                        
+                        // Scale and position the GLB model appropriately  
+                        loadedGLBModel.scale.setScalar(1.0); // Increased from 0.8 for better visibility
+                        loadedGLBModel.rotation.y = Math.PI; // Face forward
+                        
+                        // Enable shadows for all meshes in the GLB model
+                        loadedGLBModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                
+                                // Enhance materials for better lighting response
+                                if (child.material) {
+                                    if (child.material.isMeshStandardMaterial || child.material.isMeshPhysicalMaterial) {
+                                        // Keep original PBR properties but ensure good lighting response
+                                        child.material.envMapIntensity = 1.0;
+                                        child.material.needsUpdate = true;
+                                    } else if (child.material.isMeshLambertMaterial || child.material.isMeshPhongMaterial) {
+                                        // Convert to standard material for better lighting
+                                        const newMaterial = new THREE.MeshStandardMaterial({
+                                            color: child.material.color,
+                                            map: child.material.map,
+                                            normalMap: child.material.normalMap,
+                                            metalness: 0.6,
+                                            roughness: 0.4
+                                        });
+                                        child.material = newMaterial;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        document.getElementById('loading').style.display = 'none';
+                        resolve(loadedGLBModel);
+                    },
+                    function (progress) {
+                        console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                    },
+                    function (error) {
+                        console.error('Error loading GLB model:', error);
+                        document.getElementById('loading').style.display = 'none';
+                        
+                        // Provide more detailed error message
+                        let errorMessage = 'Failed to load 3D model';
+                        if (error.message && error.message.includes('DRACO')) {
+                            errorMessage = 'DRACO compression error';
+                        } else if (error.message && error.message.includes('404')) {
+                            errorMessage = 'Model file not found';
+                        }
+                        
+                        reject(new Error(errorMessage));
+                    }
+                );
+            });
+        }
+        
+        function toggleVoyagerModel() {
+            const toggleBtn = document.getElementById('model-toggle');
+            
+            if (!usingGLBModel) {
+                // Switch to GLB model
+                toggleBtn.textContent = '⏳ Loading...';
+                toggleBtn.disabled = true;
+                
+                loadGLBModel().then((glbModel) => {
+                    // Remove current procedural model
+                    if (currentVoyager) {
+                        mainScene.remove(currentVoyager);
+                    }
+                    
+                    // Add GLB model
+                    currentVoyager = glbModel.clone();
+                    currentVoyager.position.set(0, 0, 0);
+                    mainScene.add(currentVoyager);
+                    
+                    // Enable enhanced lighting for GLB model
+                    createGLBLighting();
+                    
+                    // Adjust camera for better GLB model viewing
+                    const currentDistance = mainCamera.position.length();
+                    if (currentDistance < 8) {
+                        const direction = mainCamera.position.clone().normalize();
+                        mainCamera.position.copy(direction.multiplyScalar(8));
+                    }
+                    
+                    usingGLBModel = true;
+                    toggleBtn.textContent = '🔧 Use Simple Model';
+                    toggleBtn.disabled = false;
+                    toggleBtn.classList.add('active');
+                    
+                    console.log('Switched to GLB model with enhanced lighting');
+                }).catch((error) => {
+                    console.error('Failed to load GLB model:', error);
+                    toggleBtn.textContent = '❌ ' + error.message;
+                    setTimeout(() => {
+                        toggleBtn.textContent = '📦 Load High-Detail Model';
+                        toggleBtn.disabled = false;
+                    }, 3000);
+                });
+            } else {
+                // Switch back to procedural model
+                if (currentVoyager) {
+                    mainScene.remove(currentVoyager);
+                }
+                
+                // Remove GLB-specific lighting
+                removeGLBLighting();
+                
+                // Create new procedural model
+                currentVoyager = createDetailedVoyagerModel();
+                currentVoyager.position.set(0, 0, 0);
+                mainScene.add(currentVoyager);
+                
+                usingGLBModel = false;
+                toggleBtn.textContent = '📦 Load High-Detail Model';
+                toggleBtn.classList.remove('active');
+                
+                console.log('Switched to procedural model with standard lighting');
+            }
+        }
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // Update main scene
+            if (mainScene && mainScene.userData && mainScene.userData.updateCamera) {
+                mainScene.userData.updateCamera();
+            }
+            
+            // Rotate the main Voyager model slowly
+            if (currentVoyager) {
+                currentVoyager.rotation.y += 0.005;
+            }
+            
+            // Update map scene
+            if (mapScene && mapScene.userData && mapScene.userData.updateCamera) {
+                mapScene.userData.updateCamera();
+            }
+            
+            // Animate map planets
+            mapPlanets.forEach((planet, index) => {
+                if (planet && planet.userData && planet.userData.distance) {
+                    const angle = Date.now() * 0.0001 * (index + 1);
+                    const distance = planet.userData.distance;
+                    planet.position.x = Math.cos(angle) * distance;
+                    planet.position.z = Math.sin(angle) * distance;
+                    planet.rotation.y += 0.02;
+                }
+            });
+            
+            // Animate map sun
+            if (mapSun) mapSun.rotation.y += 0.01;
+            
+            // Animate star twinkling
+            const time = Date.now() * 0.001;
+            
+            // Main scene stars
+            if (mainScene && mainScene.userData.stars) {
+                mainScene.userData.stars.forEach(starField => {
+                    if (starField && starField.userData) {
+                        const { originalOpacity, twinkleSpeed, twinklePhase } = starField.userData;
+                        const twinkle = Math.sin(time * twinkleSpeed + twinklePhase) * 0.3 + 0.7;
+                        starField.material.opacity = originalOpacity * twinkle;
+                    }
+                });
+            }
+            
+            // Map scene stars
+            if (mapScene && mapScene.userData.stars) {
+                mapScene.userData.stars.forEach(starField => {
+                    if (starField && starField.userData) {
+                        const { originalOpacity, twinkleSpeed, twinklePhase } = starField.userData;
+                        const twinkle = Math.sin(time * twinkleSpeed + twinklePhase) * 0.2 + 0.8;
+                        starField.material.opacity = originalOpacity * twinkle;
+                    }
+                });
+            }
+            
+            // Render both scenes
+            if (mainRenderer && mainScene && mainCamera) {
+                mainRenderer.render(mainScene, mainCamera);
+            }
+            if (mapRenderer && mapScene && mapCamera) {
+                mapRenderer.render(mapScene, mapCamera);
+            }
+        }
+
+        // Map control functions
+        function mapFocusVoyager1() {
+            if (mapVoyager1 && mapCamera) {
+                const pos = mapVoyager1.position;
+                mapCamera.position.set(pos.x + 15, pos.y + 20, pos.z + 15);
+                mapCamera.lookAt(pos);
+            }
+            updateMapButtons('V1');
+        }
+
+        function mapFocusVoyager2() {
+            if (mapVoyager2 && mapCamera) {
+                const pos = mapVoyager2.position;
+                mapCamera.position.set(pos.x + 15, pos.y + 20, pos.z + 15);
+                mapCamera.lookAt(pos);
+            }
+            updateMapButtons('V2');
+        }
+
+        function mapViewSolarSystem() {
+            if (mapCamera) {
+                mapCamera.position.set(0, 120, 30); // Match initial top-down view
+                mapCamera.lookAt(0, 0, 0);
+            }
+            updateMapButtons('🌌');
+        }
+
+        function mapToggleTrajectories() {
+            mapShowTrajectories = !mapShowTrajectories;
+            mapTrajectoryLines.forEach(line => {
+                line.visible = mapShowTrajectories;
+            });
+            updateMapButtons('📍');
+        }
+
+        function updateMapButtons(activeButton) {
+            const buttons = document.querySelectorAll('.map-control-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            const activeBtn = Array.from(buttons).find(btn => 
+                btn.textContent.includes(activeButton)
+            );
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        // Event listeners
+        document.getElementById('panel-toggle').addEventListener('click', function() {
+            const panel = document.getElementById('voyager-info-panel');
+            panel.classList.toggle('open');
+        });
+
+        window.addEventListener('resize', function() {
+            mainCamera.aspect = window.innerWidth / window.innerHeight;
+            mainCamera.updateProjectionMatrix();
+            mainRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Update distance counter
+        setInterval(() => {
+            const v1Current = parseFloat(document.getElementById('v1-distance').textContent);
+            const v2Current = parseFloat(document.getElementById('v2-distance').textContent);
+            document.getElementById('v1-distance').textContent = (v1Current + 0.0001).toFixed(4) + ' AU';
+            document.getElementById('v2-distance').textContent = (v2Current + 0.0001).toFixed(4) + ' AU';
+        }, 5000);
+
+        // Cleanup function
+        window.addEventListener('beforeunload', function() {
+            if (dracoLoader) {
+                dracoLoader.dispose();
+            }
+        });
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

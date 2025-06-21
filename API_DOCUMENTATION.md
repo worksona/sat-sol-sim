@@ -1,8 +1,8 @@
-# Solar System API Documentation
+# sat-sol-sim API Documentation
 
 ## Overview
 
-The Solar System API provides comprehensive programmatic control over the 3D Solar System Satellite Simulation. This API enables developers to create custom applications, automate simulations, and build educational tools.
+The sat-sol-sim API provides comprehensive programmatic control over the 3D satellite and solar system simulator. This API enables developers to create custom applications, automate simulations, and build educational tools.
 
 ## Version
 **Current Version:** 1.0.0

@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Solar System API",
-    "description": "Comprehensive JavaScript API for controlling the 3D Solar System Satellite Simulation",
+    "title": "sat-sol-sim API",
+    "description": "Comprehensive JavaScript API for controlling the 3D satellite and solar system simulator",
     "version": "1.0.0",
     "contact": {
-      "name": "Solar System Simulation Team",
-      "email": "support@solarsystem-api.com"
+      "name": "david@atomic47.co",
+      "email": "david@atomic47.co"
     },
     "license": {
       "name": "MIT",
