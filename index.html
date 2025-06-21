@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sat-Sol-Sim | Solar System Satellite Simulation API</title>
+    <meta name="description" content="Professional 3D solar system simulation with comprehensive API for satellite constellation analysis, orbital mechanics visualization, and space education.">
+    <meta name="keywords" content="satellite simulation, solar system API, orbital mechanics, space visualization, 3D astronomy, satellite constellation">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #001122;
+            color: #00ff00;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="0.3" fill="white" opacity="0.6"/><circle cx="30" cy="25" r="0.2" fill="white" opacity="0.4"/><circle cx="50" cy="15" r="0.25" fill="white" opacity="0.5"/><circle cx="70" cy="35" r="0.15" fill="white" opacity="0.3"/><circle cx="85" cy="20" r="0.2" fill="white" opacity="0.4"/><circle cx="20" cy="40" r="0.25" fill="white" opacity="0.5"/><circle cx="60" cy="50" r="0.15" fill="white" opacity="0.3"/><circle cx="40" cy="70" r="0.2" fill="white" opacity="0.4"/><circle cx="80" cy="60" r="0.25" fill="white" opacity="0.5"/><circle cx="15" cy="80" r="0.15" fill="white" opacity="0.3"/></svg>') repeat;
+            z-index: -1;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.2; }
+        }
+        
+        header {
+            background: rgba(0, 17, 34, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-decoration: none;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: #00ff00;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #00ff00;
+        }
+        
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.9) 0%, rgba(0, 34, 68, 0.7) 100%);
+        }
+        
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .hero-text h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            line-height: 1.2;
+        }
+        
+        .hero-text .subtitle {
+            font-size: 1.2rem;
+            color: #00ccff;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .hero-text .description {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            color: #00ff00;
+            opacity: 0.8;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 2px solid;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        
+        .btn-secondary {
+            background: rgba(0, 204, 255, 0.2);
+            border-color: #00ccff;
+            color: #00ccff;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px currentColor;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .hero-terminal {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            position: relative;
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        .terminal-dots {
+            display: flex;
+            gap: 0.5rem;
+            margin-right: 1rem;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot.red { background: #ff5555; }
+        .dot.yellow { background: #ffb86c; }
+        .dot.green { background: #50fa7b; }
+        
+        .terminal-title {
+            color: #00ff00;
+            font-size: 0.9rem;
+        }
+        
+        .terminal-content {
+            color: #00ff00;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .terminal-prompt {
+            color: #00ccff;
+        }
+        
+        .terminal-command {
+            color: #00ff88;
+        }
+        
+        .terminal-comment {
+            color: #888;
+        }
+        
+        .section {
+            padding: 80px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        
+        .section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #00ff88;
+            text-align: center;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        .section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #00ccff;
+            text-shadow: 0 0 5px #00ccff;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #00ff88;
+        }
+        
+        .api-section {
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .api-module {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .api-module h4 {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px #00ff88;
+        }
+        
+        .api-methods {
+            list-style: none;
+            margin: 1rem 0;
+        }
+        
+        .api-methods li {
+            padding: 0.3rem 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+        }
+        
+        .method-name {
+            color: #00ccff;
+            font-weight: bold;
+        }
+        
+        .method-desc {
+            color: #00ff00;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            color: #00ff00;
+        }
+        
+        .demo-section {
+            background: rgba(0, 17, 34, 0.3);
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .demo-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #00ccff;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .demo-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .demo-card h4 {
+            color: #00ccff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .demo-card p {
+            margin-bottom: 1.5rem;
+            opacity: 0.8;
+        }
+        
+        .demo-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ff88;
+            display: block;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        .stat-label {
+            color: #00ccff;
+            margin-top: 0.5rem;
+        }
+        
+        footer {
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #00ff00;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #00ccff;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .footer-links a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #00ccff;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .features-grid,
+            .api-grid,
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .highlight {
+            color: #00ff88;
+            text-shadow: 0 0 5px #00ff88;
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    
+    <header>
+        <nav class="container">
+            <a href="#" class="logo">🛰️ Sat-Sol-Sim</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="api-documentation.html">API Docs</a></li>
+                <li><a href="satellite-info.html">Satellite Info</a></li>
+                <li><a href="#demos">Demos</a></li>
+                <li><a href="swagger-ui.html">Swagger</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Sat-Sol-Sim</h1>
+                    <div class="subtitle">Solar System Satellite Simulation API</div>
+                    <div class="description">
+                        Professional-grade 3D solar system visualization with comprehensive satellite constellation modeling. 
+                        Built for education, research, and space mission planning with full programmatic control.
+                    </div>
+                    <div class="cta-buttons">
+                        <a href="satellite_simulation.html" class="btn btn-primary">Launch Simulation</a>
+                        <a href="api-documentation.html" class="btn btn-secondary">API Documentation</a>
+                        <a href="satellite-info.html" class="btn btn-secondary">Satellite Information</a>
+                        <a href="swagger-ui.html" class="btn btn-secondary">Swagger API</a>
+                    </div>
+                </div>
+                
+                <div class="hero-terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">sat-sol-sim.js</div>
+                    </div>
+                    <div class="terminal-content">
+<span class="terminal-prompt">$</span> <span class="terminal-command">npm install sat-sol-sim</span>
+<span class="terminal-comment">// Load the simulation API</span>
+<span class="terminal-command">import SatSolSim from 'sat-sol-sim';</span>
+
+<span class="terminal-comment">// Initialize and control</span>
+<span class="terminal-command">SatSolSim.simulation.setSpeed(2.0);</span>
+<span class="terminal-command">SatSolSim.camera.setPreset('solar-system');</span>
+<span class="terminal-command">SatSolSim.satellites.highlight('LEO_COMM');</span>
+
+<span class="terminal-comment">// Export data and configurations</span>
+<span class="terminal-command">const config = SatSolSim.utils.export();</span>
+<span class="terminal-command">SatSolSim.utils.takeScreenshot();</span>
+
+<span class="blink">█</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h2>🚀 Features</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">8</span>
+                    <div class="stat-label">Planetary Bodies</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">5</span>
+                    <div class="stat-label">Satellite Classes</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">6</span>
+                    <div class="stat-label">API Modules</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">∞</span>
+                    <div class="stat-label">Possibilities</div>
+                </div>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🌌</span>
+                    <h3>Complete Solar System</h3>
+                    <p>All 8 planets with realistic orbital mechanics, sizes, colors, and rotation periods. Includes Saturn's rings, planetary textures, and accurate celestial positioning.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🛰️</span>
+                    <h3>Advanced Satellite Modeling</h3>
+                    <p>5 satellite constellation types: LEO Communications, Weather Monitoring, GPS Navigation, GEO Communications, and Military. Realistic orbital parameters and failure simulation.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📡</span>
+                    <h3>Real-time Orbital Mechanics</h3>
+                    <p>Accurate Keplerian orbital elements, gravitational effects, and orbital decay simulation. Perfect for mission planning and educational demonstrations.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🎛️</span>
+                    <h3>Comprehensive API Control</h3>
+                    <p>Full programmatic access to simulation state, camera controls, satellite management, visual settings, and event handling. Chainable methods and TypeScript support.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📱</span>
+                    <h3>Cross-Platform Compatible</h3>
+                    <p>Optimized for desktop and mobile devices with touch controls, WebGL acceleration, and responsive design. Works in any modern web browser.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3>Professional Visualizations</h3>
+                    <p>High-quality 3D graphics with dynamic lighting, particle effects, orbital trails, and customizable visual themes including negative mode for presentations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="api" class="section api-section">
+        <div class="container">
+            <h2>📚 API Documentation</h2>
+            <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: #00ccff;">
+                Complete programmatic control over the solar system simulation
+            </p>
+            
+            <div class="code-block">
+                <pre><code><span class="terminal-comment">// Global API Access</span>
+<span class="terminal-command">const api = window.SolarSystemAPI;</span> <span class="terminal-comment">// or import SatSolSim from 'sat-sol-sim'</span>
+
+<span class="terminal-comment">// All methods are chainable for fluid control</span>
+<span class="terminal-command">api.simulation.setSpeed(2.0).start()
+   .camera.setPreset(3).enableFreeMode()
+   .satellites.highlight('LEO_COMM')
+   .visuals.hideUI().enableNegativeMode();</span></code></pre>
+            </div>
+            
+            <div class="api-grid">
+                <div class="api-module">
+                    <h4>🎮 Simulation Control</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">start()</span> <span class="method-desc">Start the simulation</span></li>
+                        <li><span class="method-name">pause()</span> <span class="method-desc">Pause the simulation</span></li>
+                        <li><span class="method-name">reset()</span> <span class="method-desc">Reset to initial state</span></li>
+                        <li><span class="method-name">setSpeed(speed)</span> <span class="method-desc">Set simulation speed (0.1-3.0)</span></li>
+                        <li><span class="method-name">getState()</span> <span class="method-desc">Get current simulation state</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">api.simulation.setSpeed(1.5);</span>
+<span class="terminal-command">api.simulation.pause();</span>
+<span class="terminal-command">const state = api.simulation.getState();</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="api-module">
+                    <h4>📷 Camera Management</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">setPreset(preset)</span> <span class="method-desc">Set camera preset (0-7)</span></li>
+                        <li><span class="method-name">enableFreeMode()</span> <span class="method-desc">Enable free camera mode</span></li>
+                        <li><span class="method-name">disableFreeMode()</span> <span class="method-desc">Disable free camera mode</span></li>
+                        <li><span class="method-name">enableFollowEarth()</span> <span class="method-desc">Follow Earth's orbital motion</span></li>
+                        <li><span class="method-name">setPosition(x, y, z)</span> <span class="method-desc">Set camera position directly</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">api.camera.setPreset(3); // Solar system view</span>
+<span class="terminal-command">api.camera.enableFreeMode();</span>
+<span class="terminal-command">api.camera.enableFollowEarth();</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="api-module">
+                    <h4>🛰️ Satellite Operations</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">highlight(type)</span> <span class="method-desc">Highlight satellite constellation</span></li>
+                        <li><span class="method-name">clearHighlight()</span> <span class="method-desc">Clear all highlighting</span></li>
+                        <li><span class="method-name">setConfiguration(config)</span> <span class="method-desc">Update satellite counts</span></li>
+                        <li><span class="method-name">getSatellites(filter)</span> <span class="method-desc">Get satellite data with filtering</span></li>
+                        <li><span class="method-name">simulateFailure(count)</span> <span class="method-desc">Simulate satellite failures</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">api.satellites.highlight('LEO_COMM');</span>
+<span class="terminal-command">api.satellites.setConfiguration({</span>
+<span class="terminal-command">  LEO_COMM: 100, MEO_NAV: 50</span>
+<span class="terminal-command">});</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="api-module">
+                    <h4>🌍 Celestial Bodies</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">getSun()</span> <span class="method-desc">Get Sun data and position</span></li>
+                        <li><span class="method-name">getPlanets()</span> <span class="method-desc">Get all planet data</span></li>
+                        <li><span class="method-name">getEarth()</span> <span class="method-desc">Get Earth position and data</span></li>
+                        <li><span class="method-name">getMoon()</span> <span class="method-desc">Get Moon position and data</span></li>
+                        <li><span class="method-name">getPlanet(name)</span> <span class="method-desc">Get specific planet data</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">const earth = api.celestialBodies.getEarth();</span>
+<span class="terminal-command">const planets = api.celestialBodies.getPlanets();</span>
+<span class="terminal-command">const mars = api.celestialBodies.getPlanet('mars');</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="api-module">
+                    <h4>🎨 Visual Controls</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">showOrbits() / hideOrbits()</span> <span class="method-desc">Toggle orbital rings</span></li>
+                        <li><span class="method-name">showTrails() / hideTrails()</span> <span class="method-desc">Toggle satellite trails</span></li>
+                        <li><span class="method-name">showUI() / hideUI()</span> <span class="method-desc">Toggle interface panels</span></li>
+                        <li><span class="method-name">enableNegativeMode()</span> <span class="method-desc">Enable inverted colors</span></li>
+                        <li><span class="method-name">getVisualState()</span> <span class="method-desc">Get current visual settings</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">api.visuals.hideUI();</span>
+<span class="terminal-command">api.visuals.enableNegativeMode();</span>
+<span class="terminal-command">api.visuals.showTrails();</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="api-module">
+                    <h4>⚡ Events & Utilities</h4>
+                    <ul class="api-methods">
+                        <li><span class="method-name">on(event, callback)</span> <span class="method-desc">Subscribe to events</span></li>
+                        <li><span class="method-name">exportConfiguration()</span> <span class="method-desc">Export current settings</span></li>
+                        <li><span class="method-name">importConfiguration(config)</span> <span class="method-desc">Import saved settings</span></li>
+                        <li><span class="method-name">takeScreenshot()</span> <span class="method-desc">Capture simulation image</span></li>
+                        <li><span class="method-name">getSystemInfo()</span> <span class="method-desc">Get performance metrics</span></li>
+                    </ul>
+                    <div class="code-block">
+                        <pre><code><span class="terminal-command">api.events.on('satelliteFailure', (data) => {</span>
+<span class="terminal-command">  console.log('Failure:', data);</span>
+<span class="terminal-command">});</span>
+<span class="terminal-command">api.utils.takeScreenshot();</span></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="demos" class="section demo-section">
+        <div class="container">
+            <h2>🎯 Interactive Demos</h2>
+            <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: #00ccff;">
+                Learn the API through hands-on examples and guided tours
+            </p>
+            
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h4>🎮 Basic Control Demo</h4>
+                    <p>Interactive buttons to learn fundamental API methods with real-time feedback and status monitoring. Perfect for beginners.</p>
+                    <a href="demo/basic-control.html" class="btn btn-primary">Launch Basic Demo</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>🚀 Camera Tour Demo</h4>
+                    <p>Automated guided tour through 8 camera presets with smooth transitions, pause/resume controls, and progress tracking.</p>
+                    <a href="demo/camera-tour.html" class="btn btn-primary">Start Camera Tour</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>💻 API Playground</h4>
+                    <p>Live code editor with syntax highlighting, real-time execution, example snippets, and instant visual feedback.</p>
+                    <a href="demo/api-playground.html" class="btn btn-primary">Open Playground</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>🌌 Full Simulation</h4>
+                    <p>Complete solar system simulation with all features enabled. The main application with comprehensive controls and settings.</p>
+                    <a href="satellite_simulation.html" class="btn btn-secondary">Launch Simulation</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>🛰️ Satellite Information</h4>
+                    <p>Comprehensive guide to satellite orbital classifications with real-world data from 7,560 active satellites across all orbital types.</p>
+                    <a href="satellite-info.html" class="btn btn-primary">Explore Satellites</a>
+                </div>
+                
+                <div class="demo-card">
+                    <h4>⚡ Swagger API</h4>
+                    <p>Interactive API documentation with live testing capabilities. Test endpoints, explore data models, and understand the API structure.</p>
+                    <a href="swagger-ui.html" class="btn btn-primary">Test API</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="examples" class="section">
+        <div class="container">
+            <h2>💡 Code Examples</h2>
+            
+            <h3>🎬 Automated Camera Tour</h3>
+            <div class="code-block">
+                <pre><code><span class="terminal-comment">// Create an automated tour of the solar system</span>
+<span class="terminal-command">const tour = async () => {</span>
+<span class="terminal-command">  const presets = [0, 1, 2, 3, 4, 5, 6, 7];</span>
+<span class="terminal-command">  const names = ['Sun View', 'Sun Close', 'Earth Close', 'Moon View', 
+                'Orbital View', 'Solar System', 'Earth Polar', 'Random Satellite'];</span>
+<span class="terminal-command">  
+  for (let i = 0; i < presets.length; i++) {</span>
+<span class="terminal-command">    console.log(`Tour Stop ${i + 1}: ${names[i]}`);</span>
+<span class="terminal-command">    api.camera.setPreset(presets[i]);</span>
+<span class="terminal-command">    await new Promise(resolve => setTimeout(resolve, 5000));</span>
+<span class="terminal-command">  }</span>
+<span class="terminal-command">};</span>
+
+<span class="terminal-command">tour();</span></code></pre>
+            </div>
+            
+            <h3>📊 Satellite Constellation Analysis</h3>
+            <div class="code-block">
+                <pre><code><span class="terminal-comment">// Analyze satellite coverage and highlight patterns</span>
+<span class="terminal-command">const analyzeConstellation = (type) => {</span>
+<span class="terminal-command">  // Highlight the constellation</span>
+<span class="terminal-command">  api.satellites.highlight(type);</span>
+<span class="terminal-command">  
+  // Get satellite data</span>
+<span class="terminal-command">  const satellites = api.satellites.getSatellites({ type });</span>
+<span class="terminal-command">  
+  // Show trails for better visualization</span>
+<span class="terminal-command">  api.visuals.showTrails();</span>
+<span class="terminal-command">  
+  // Set optimal camera view</span>
+<span class="terminal-command">  api.camera.setPreset(4); // Orbital view</span>
+<span class="terminal-command">  
+  console.log(`${type} Constellation:`, {</span>
+<span class="terminal-command">    count: satellites.length,</span>
+<span class="terminal-command">    operational: satellites.filter(s => s.status === 'operational').length</span>
+<span class="terminal-command">  });</span>
+<span class="terminal-command">};</span>
+
+<span class="terminal-command">analyzeConstellation('LEO_COMM');</span></code></pre>
+            </div>
+            
+            <h3>🎨 Presentation Mode Setup</h3>
+            <div class="code-block">
+                <pre><code><span class="terminal-comment">// Configure simulation for professional presentations</span>
+<span class="terminal-command">const presentationMode = () => {</span>
+<span class="terminal-command">  // Hide UI for clean view</span>
+<span class="terminal-command">  api.visuals.hideUI();</span>
+<span class="terminal-command">  
+  // Set slower speed for better observation</span>
+<span class="terminal-command">  api.simulation.setSpeed(0.5);</span>
+<span class="terminal-command">  
+  // Enable trails for visual appeal</span>
+<span class="terminal-command">  api.visuals.showTrails();</span>
+<span class="terminal-command">  
+  // Set wide solar system view</span>
+<span class="terminal-command">  api.camera.setPreset(5);</span>
+<span class="terminal-command">  
+  // Optional: Enable dramatic negative mode</span>
+<span class="terminal-command">  // api.visuals.enableNegativeMode();</span>
+<span class="terminal-command">  
+  console.log('Presentation mode activated');</span>
+<span class="terminal-command">};</span>
+
+<span class="terminal-command">presentationMode();</span></code></pre>
+            </div>
+            
+            <h3>📡 Mission Planning Simulation</h3>
+            <div class="code-block">
+                <pre><code><span class="terminal-comment">// Simulate satellite deployment and failure scenarios</span>
+<span class="terminal-command">const missionPlan = async () => {</span>
+<span class="terminal-command">  // Reset to clean state</span>
+<span class="terminal-command">  api.simulation.reset();</span>
+<span class="terminal-command">  
+  // Deploy initial constellation</span>
+<span class="terminal-command">  api.satellites.setConfiguration({</span>
+<span class="terminal-command">    LEO_COMM: 50,</span>
+<span class="terminal-command">    MEO_NAV: 24,</span>
+<span class="terminal-command">    GEO_COMM: 12</span>
+<span class="terminal-command">  });</span>
+<span class="terminal-command">  
+  // Monitor constellation</span>
+<span class="terminal-command">  api.events.on('satelliteFailure', (data) => {</span>
+<span class="terminal-command">    console.log(`Mission Alert: ${data.type} satellite failed`);</span>
+<span class="terminal-command">  });</span>
+<span class="terminal-command">  
+  // Simulate operational period</span>
+<span class="terminal-command">  setTimeout(() => {</span>
+<span class="terminal-command">    console.log('Simulating satellite failures...');</span>
+<span class="terminal-command">    api.satellites.simulateFailure(3);</span>
+<span class="terminal-command">  }, 10000);</span>
+<span class="terminal-command">};</span>
+
+<span class="terminal-command">missionPlan();</span></code></pre>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+                    <div class="footer-links">
+            <a href="satellite_simulation.html">Launch Simulation</a>
+            <a href="demo/">Interactive Demos</a>
+            <a href="api-documentation.html">API Documentation</a>
+            <a href="satellite-info.html">Satellite Information</a>
+            <a href="swagger-ui.html">Swagger API</a>
+            <a href="DOCS_README.md">Documentation Guide</a>
+        </div>
+            <p>&copy; 2024 Sat-Sol-Sim | Professional Solar System Simulation API</p>
+            <p class="highlight">🛰️ Advancing space education through interactive visualization 🌌</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Terminal typing effect
+        const terminalContent = document.querySelector('.terminal-content');
+        if (terminalContent) {
+            const originalContent = terminalContent.innerHTML;
+            terminalContent.innerHTML = '';
+            
+            let i = 0;
+            const typeWriter = () => {
+                if (i < originalContent.length) {
+                    terminalContent.innerHTML = originalContent.slice(0, i + 1);
+                    i++;
+                    setTimeout(typeWriter, 50);
+                }
+            };
+            
+            // Start typing effect after a delay
+            setTimeout(typeWriter, 1000);
+        }
+
+        // Animate stats when they come into view
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumber = entry.target.querySelector('.stat-number');
+                    const finalNumber = statNumber.textContent;
+                    if (finalNumber !== '∞') {
+                        let currentNumber = 0;
+                        const increment = parseInt(finalNumber) / 30;
+                        const timer = setInterval(() => {
+                            currentNumber += increment;
+                            if (currentNumber >= parseInt(finalNumber)) {
+                                statNumber.textContent = finalNumber;
+                                clearInterval(timer);
+                            } else {
+                                statNumber.textContent = Math.floor(currentNumber);
+                            }
+                        }, 50);
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback);
+        document.querySelectorAll('.stat').forEach(stat => {
+            observer.observe(stat);
+        });
+
+        // Header background change on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.style.background = 'rgba(0, 17, 34, 0.98)';
+            } else {
+                header.style.background = 'rgba(0, 17, 34, 0.95)';
+            }
+        });
+    </script>
+</body>
+</html> 

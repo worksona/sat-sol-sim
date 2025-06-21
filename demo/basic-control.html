@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System API - Basic Control Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #001122;
+            color: #00ff00;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .demo-overlay {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 350px;
+            max-height: calc(100vh - 20px);
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .demo-header {
+            color: #00ff88;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #004400;
+            padding-bottom: 10px;
+        }
+        
+        .demo-section {
+            margin: 12px 0;
+            padding: 10px;
+            border: 1px solid #004400;
+            border-radius: 6px;
+            background: rgba(0, 20, 0, 0.3);
+        }
+        
+        .demo-section h3 {
+            color: #00ff88;
+            margin: 0 0 8px 0;
+            font-size: 13px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin: 6px 0;
+        }
+        
+        .button-row {
+            display: flex;
+            gap: 4px;
+            margin: 4px 0;
+        }
+        
+        button {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        button:hover {
+            background: #004400;
+            box-shadow: 0 0 8px #00ff00;
+        }
+        
+        button:active {
+            background: #006600;
+        }
+        
+        .status-box {
+            background: #001100;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 6px 0;
+            border-left: 3px solid #00ff00;
+            font-size: 10px;
+        }
+        
+        .code-hint {
+            background: #000011;
+            border: 1px solid #004400;
+            padding: 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            color: #666666;
+            margin: 4px 0;
+        }
+        
+        .toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toggle-demo:hover {
+            background: rgba(0, 50, 0, 0.8);
+        }
+        
+        .success { color: #00ff88; }
+        .warning { color: #ffaa00; }
+        .error { color: #ff6666; }
+        
+        /* Hide original simulation UI */
+        .ui-panel {
+            display: none !important;
+        }
+        
+        #ui-toggle {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <button class="toggle-demo" onclick="toggleDemo()" title="Toggle Demo Controls">🎮</button>
+    
+    <div class="demo-overlay" id="demo-overlay">
+        <div class="demo-header">
+            🌟 Basic Control Demo
+        </div>
+        
+        <div class="status-box" id="api-status">
+            ⏳ Loading simulation...
+        </div>
+        
+        <div class="demo-section">
+            <h3>🎮 Simulation Control</h3>
+            <div class="button-row">
+                <button onclick="startSim()">▶️ Start</button>
+                <button onclick="pauseSim()">⏸️ Pause</button>
+                <button onclick="resetSim()">🔄 Reset</button>
+            </div>
+            <div class="button-row">
+                <button onclick="setSpd(0.5)">🐌 0.5x</button>
+                <button onclick="setSpd(1.0)">🚶 1x</button>
+                <button onclick="setSpd(2.0)">🏃 2x</button>
+                <button onclick="setSpd(3.0)">🚀 3x</button>
+            </div>
+            <div class="code-hint">SolarSystemAPI.simulation.setSpeed(2.0)</div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>📷 Camera Presets</h3>
+            <div class="button-grid">
+                <button onclick="setCam(0)">☀️ Sun</button>
+                <button onclick="setCam(1)">🔥 Close</button>
+                <button onclick="setCam(2)">🌍 Earth</button>
+                <button onclick="setCam(3)">🌙 Moon</button>
+                <button onclick="setCam(4)">🛰️ Sat</button>
+                <button onclick="setCam(5)">🌌 System</button>
+                <button onclick="setCam(6)">🧭 Polar</button>
+                <button onclick="setCam(7)">🎲 Random</button>
+            </div>
+            <div class="code-hint">SolarSystemAPI.camera.setPreset(2)</div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🛰️ Satellite Management</h3>
+            <div class="button-grid">
+                <button onclick="hlSat('LEO_COMM')">📡 LEO</button>
+                <button onclick="hlSat('LEO_WEATHER')">🌤️ Weather</button>
+                <button onclick="hlSat('MEO_NAV')">🧭 GPS</button>
+                <button onclick="hlSat('GEO_COMM')">📺 GEO</button>
+                <button onclick="hlSat('MILITARY')">🔒 Military</button>
+            </div>
+            <div class="button-row">
+                <button onclick="clearHL()">🔄 Clear</button>
+                <button onclick="failSat()">💥 Fail</button>
+                <button onclick="showStats()">📊 Stats</button>
+            </div>
+            <div class="code-hint">SolarSystemAPI.satellites.highlight('LEO_COMM')</div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🎨 Visual Effects</h3>
+            <div class="button-row">
+                <button onclick="togOrbits()">🌍 Orbits</button>
+                <button onclick="togTrails()">✨ Trails</button>
+                <button onclick="togUI()">📋 UI</button>
+                <button onclick="togNeg()">🌑 Negative</button>
+            </div>
+            <div class="code-hint">SolarSystemAPI.visuals.showTrails()</div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>🔧 Advanced Features</h3>
+            <div class="button-row">
+                <button onclick="takeScreenshot()">📸 Screenshot</button>
+                <button onclick="exportConfig()">💾 Export</button>
+                <button onclick="showSystemInfo()">ℹ️ Info</button>
+                <button onclick="runAutomation()">🤖 Auto Demo</button>
+            </div>
+            <div class="code-hint">SolarSystemAPI.utils.takeScreenshot()</div>
+        </div>
+        
+        <div class="demo-section">
+            <h3>📊 Live Status</h3>
+            <div class="status-box">
+                <div>Speed: <span id="speed">1.0x</span></div>
+                <div>Camera: <span id="camera">Sun View</span></div>
+                <div>Satellites: <span id="sats">--</span></div>
+                <div>State: <span id="state">Loading</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulation variables
+        let scene, camera, renderer;
+        let earth, moon, sun, satellites = [];
+        let paused = false, simulationSpeed = 1.0;
+        let earthOrbitAngle = 0, moonOrbitAngle = 0;
+        let showOrbits = true, showTrails = false, negativeLighting = false;
+        let uiVisible = true, freeMode = false, followEarth = false;
+        let currentCameraPreset = 0;
+        let highlightedSatellites = [];
+        let planets = {};
+        let sunLight;
+        
+        // Camera presets
+        const cameraPresets = [
+            { name: "Sun View", position: { x: 0, y: 50, z: 200 }, target: { x: 0, y: 0, z: 0 }, description: "View from Sun to Earth" },
+            { name: "Sun Close", position: { x: 0, y: 25, z: 150 }, target: { x: 0, y: 0, z: 0 }, description: "Closer Sun perspective" },
+            { name: "Earth Close", position: { x: 120, y: 30, z: 80 }, target: { x: 100, y: 0, z: 0 }, description: "Close Earth observation" },
+            { name: "Moon View", position: { x: 130, y: 10, z: 30 }, target: { x: 100, y: 0, z: 0 }, description: "View from Moon to Earth" },
+            { name: "Orbital View", position: { x: 150, y: 100, z: 150 }, target: { x: 100, y: 0, z: 0 }, description: "Satellite constellation view" },
+            { name: "Solar System", position: { x: 0, y: 200, z: 400 }, target: { x: 0, y: 0, z: 0 }, description: "Wide solar system view" },
+            { name: "Earth Polar", position: { x: 100, y: 200, z: 0 }, target: { x: 100, y: 0, z: 0 }, description: "Top-down Earth view" },
+            { name: "Random Satellite", position: { x: 110, y: 20, z: 60 }, target: { x: 100, y: 0, z: 0 }, description: "Random satellite perspective" }
+        ];
+        
+        // Planet data
+        const planetData = {
+            mercury: { distance: 30, size: 1.5, color: 0x8c7853, speed: 4.0, tilt: 0.1 },
+            venus: { distance: 45, size: 2.4, color: 0xffc649, speed: 1.6, tilt: 177.4 },
+            mars: { distance: 120, size: 2.1, color: 0xcd5c5c, speed: 0.5, tilt: 25.2 },
+            jupiter: { distance: 180, size: 11, color: 0xd8ca9d, speed: 0.08, tilt: 3.1 },
+            saturn: { distance: 220, size: 9, color: 0xfad5a5, speed: 0.03, tilt: 26.7 },
+            uranus: { distance: 260, size: 4, color: 0x4fd0e4, speed: 0.01, tilt: 97.8 },
+            neptune: { distance: 300, size: 3.9, color: 0x4b70dd, speed: 0.006, tilt: 28.3 }
+        };
+        
+        // Initialize the simulation
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000011);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Add renderer to body
+            document.body.appendChild(renderer.domElement);
+            
+            // Create lighting
+            sunLight = new THREE.DirectionalLight(0xffffff, 1);
+            sunLight.position.set(0, 0, 0);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            scene.add(sunLight);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+            
+            // Create star field
+            createStarField();
+            
+            // Create sun
+            createSun();
+            
+            // Create planets
+            createPlanets();
+            
+            // Create Earth and Moon
+            createEarth();
+            createMoon();
+            
+            // Create satellites
+            createSatellites();
+            
+            // Create orbital rings
+            createOrbitalRings();
+            
+            // Set initial camera position
+            setCameraPreset(0);
+            
+            // Add event listeners
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', onKeyDown);
+            
+            // Start animation loop
+            animate();
+            
+            // Initialize status
+            document.getElementById('api-status').innerHTML = 
+                '<span class="success">✅ Demo Ready</span>';
+            startStatusUpdates();
+            log('🌟 Basic Control Demo loaded successfully!');
+        }
+        
+        // Create star field
+        function createStarField() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 2000;
+            const positions = new Float32Array(starCount * 3);
+            
+            for (let i = 0; i < starCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 2000;
+                positions[i + 1] = (Math.random() - 0.5) * 2000;
+                positions[i + 2] = (Math.random() - 0.5) * 2000;
+            }
+            
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 2,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+            window.starField = stars;
+        }
+        
+        // Create sun with animation
+        function createSun() {
+            const sunGroup = new THREE.Group();
+            
+            // Sun core
+            const sunGeometry = new THREE.SphereGeometry(8, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            const sunCore = new THREE.Mesh(sunGeometry, sunMaterial);
+            sunGroup.add(sunCore);
+            
+            // Sun glow layers
+            const glowLayers = 4;
+            const sunFlames = [];
+            
+            for (let i = 0; i < glowLayers; i++) {
+                const glowGeometry = new THREE.SphereGeometry(8 + i * 2, 16, 16);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: [0xff4400, 0xff6600, 0xff8800, 0xffaa00][i],
+                    transparent: true,
+                    opacity: 0.4 - i * 0.08,
+                    blending: THREE.AdditiveBlending
+                });
+                const glowSphere = new THREE.Mesh(glowGeometry, glowMaterial);
+                sunGroup.add(glowSphere);
+                sunFlames.push(glowSphere);
+            }
+            
+            scene.add(sunGroup);
+            sun = sunGroup;
+            window.sun = sunGroup;
+            window.sunFlames = sunFlames;
+        }
+        
+        // Create planets
+        function createPlanets() {
+            Object.keys(planetData).forEach(planetName => {
+                const data = planetData[planetName];
+                let planetMesh;
+                
+                if (planetName === 'saturn') {
+                    // Saturn with rings
+                    const planetGroup = new THREE.Group();
+                    
+                    const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
+                    const planetMaterial = new THREE.MeshPhongMaterial({ color: data.color });
+                    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+                    planetGroup.add(planet);
+                    
+                    // Saturn's rings
+                    const ringGeometry = new THREE.RingGeometry(data.size * 1.2, data.size * 2, 32);
+                    const ringMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xffddaa,
+                        side: THREE.DoubleSide,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+                    rings.rotation.x = Math.PI / 2;
+                    planetGroup.add(rings);
+                    
+                    planetMesh = planetGroup;
+                } else {
+                    const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
+                    const planetMaterial = new THREE.MeshPhongMaterial({ color: data.color });
+                    planetMesh = new THREE.Mesh(planetGeometry, planetMaterial);
+                }
+                
+                planetMesh.userData = { ...data, name: planetName, angle: Math.random() * Math.PI * 2 };
+                scene.add(planetMesh);
+                planets[planetName] = planetMesh;
+            });
+        }
+        
+        // Create Earth
+        function createEarth() {
+            const earthGeometry = new THREE.SphereGeometry(5, 32, 32);
+            
+            // Try to load Earth texture, fallback to simple material
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                'earth-texture.jpg',
+                function(texture) {
+                    const earthMaterial = new THREE.MeshPhongMaterial({ map: texture });
+                    earth = new THREE.Mesh(earthGeometry, earthMaterial);
+                    earth.castShadow = true;
+                    earth.receiveShadow = true;
+                    scene.add(earth);
+                },
+                undefined,
+                function(error) {
+                    // Fallback to colored material
+                    const earthMaterial = new THREE.MeshPhongMaterial({ color: 0x4444ff });
+                    earth = new THREE.Mesh(earthGeometry, earthMaterial);
+                    earth.castShadow = true;
+                    earth.receiveShadow = true;
+                    scene.add(earth);
+                }
+            );
+        }
+        
+        // Create Moon
+        function createMoon() {
+            const moonGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+            const moonMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+            moon = new THREE.Mesh(moonGeometry, moonMaterial);
+            moon.castShadow = true;
+            moon.receiveShadow = true;
+            scene.add(moon);
+        }
+        
+        // Create satellites
+        function createSatellites() {
+            const satelliteTypes = [
+                { type: 'LEO_COMM', count: 30, altitude: 8, color: 0x3333ff },
+                { type: 'LEO_WEATHER', count: 15, altitude: 10, color: 0x33ffff },
+                { type: 'MEO_NAV', count: 24, altitude: 15, color: 0xffff33 },
+                { type: 'GEO_COMM', count: 12, altitude: 25, color: 0xff3333 },
+                { type: 'MILITARY', count: 8, altitude: 20, color: 0xff33ff }
+            ];
+            
+            satelliteTypes.forEach(satType => {
+                for (let i = 0; i < satType.count; i++) {
+                    createSatellite(satType.type, satType.altitude, satType.color);
+                }
+            });
+        }
+        
+        function createSatellite(type, altitude, color) {
+            const satelliteGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.8);
+            const satelliteMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+            const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
+            
+            // Random orbital parameters
+            const inclination = (Math.random() - 0.5) * Math.PI * 0.5;
+            const longitude = Math.random() * Math.PI * 2;
+            const phase = Math.random() * Math.PI * 2;
+            
+            satellite.userData = {
+                type: type,
+                altitude: altitude,
+                inclination: inclination,
+                longitude: longitude,
+                phase: phase,
+                speed: 0.01 + Math.random() * 0.02,
+                operational: Math.random() > 0.05 // 95% operational
+            };
+            
+            // Create status light
+            const lightGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const lightMaterial = new THREE.MeshBasicMaterial({
+                color: satellite.userData.operational ? color : 0xff0000,
+                transparent: true,
+                opacity: 0.8
+            });
+            const statusLight = new THREE.Mesh(lightGeometry, lightMaterial);
+            statusLight.position.set(0, 0.5, 0);
+            satellite.add(statusLight);
+            satellite.userData.statusLight = statusLight;
+            
+            // Create trail
+            const trailGeometry = new THREE.BufferGeometry();
+            const trailPositions = new Float32Array(100 * 3);
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            const trailMaterial = new THREE.LineBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.6
+            });
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            trail.visible = showTrails;
+            scene.add(trail);
+            satellite.userData.trail = trail;
+            satellite.userData.trailPositions = [];
+            
+            scene.add(satellite);
+            satellites.push(satellite);
+        }
+        
+        // Create orbital rings
+        function createOrbitalRings() {
+            const ringDistances = [8, 10, 15, 20, 25];
+            const colors = [0x3333ff, 0x33ffff, 0xffff33, 0xff3333, 0xff33ff];
+            
+            ringDistances.forEach((distance, index) => {
+                const ringGeometry = new THREE.RingGeometry(distance - 0.1, distance + 0.1, 64);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: colors[index],
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.x = Math.PI / 2;
+                ring.visible = showOrbits;
+                scene.add(ring);
+                
+                if (!window.orbitalRings) window.orbitalRings = [];
+                window.orbitalRings.push(ring);
+            });
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!paused) {
+                // Update Earth orbit
+                earthOrbitAngle += 0.005 * simulationSpeed;
+                if (earth) {
+                    earth.position.x = Math.cos(earthOrbitAngle) * 100;
+                    earth.position.z = Math.sin(earthOrbitAngle) * 100;
+                    earth.rotation.y += 0.01 * simulationSpeed;
+                }
+                
+                // Update Moon orbit
+                moonOrbitAngle += 0.05 * simulationSpeed;
+                if (moon && earth) {
+                    moon.position.x = earth.position.x + Math.cos(moonOrbitAngle) * 10;
+                    moon.position.z = earth.position.z + Math.sin(moonOrbitAngle) * 10;
+                }
+                
+                // Update planets
+                Object.keys(planets).forEach(planetName => {
+                    const planet = planets[planetName];
+                    const data = planet.userData;
+                    data.angle += data.speed * 0.001 * simulationSpeed;
+                    
+                    planet.position.x = Math.cos(data.angle) * data.distance;
+                    planet.position.z = Math.sin(data.angle) * data.distance;
+                    planet.rotation.y += 0.01 * simulationSpeed;
+                });
+                
+                // Update satellites
+                satellites.forEach(satellite => {
+                    const data = satellite.userData;
+                    data.phase += data.speed * simulationSpeed;
+                    
+                    if (earth) {
+                        const x = earth.position.x + Math.cos(data.phase) * data.altitude * Math.cos(data.inclination);
+                        const y = Math.sin(data.phase) * data.altitude * Math.sin(data.inclination);
+                        const z = earth.position.z + Math.sin(data.phase) * data.altitude * Math.cos(data.inclination);
+                        
+                        satellite.position.set(x, y, z);
+                        
+                        // Update trail
+                        if (showTrails && data.trail) {
+                            data.trailPositions.push({ x, y, z });
+                            if (data.trailPositions.length > 50) {
+                                data.trailPositions.shift();
+                            }
+                            
+                            const positions = data.trail.geometry.attributes.position.array;
+                            for (let i = 0; i < data.trailPositions.length && i < 50; i++) {
+                                const pos = data.trailPositions[i];
+                                positions[i * 3] = pos.x;
+                                positions[i * 3 + 1] = pos.y;
+                                positions[i * 3 + 2] = pos.z;
+                            }
+                            data.trail.geometry.attributes.position.needsUpdate = true;
+                        }
+                    }
+                });
+                
+                // Animate sun flames
+                if (window.sunFlames) {
+                    window.sunFlames.forEach((flame, index) => {
+                        const time = Date.now() * 0.001;
+                        flame.material.opacity = 0.4 - index * 0.08 + Math.sin(time + index) * 0.05;
+                        flame.rotation.y += 0.001 * (index + 1);
+                    });
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Camera controls
+        function setCameraPreset(presetIndex) {
+            if (presetIndex >= 0 && presetIndex < cameraPresets.length) {
+                const preset = cameraPresets[presetIndex];
+                camera.position.set(preset.position.x, preset.position.y, preset.position.z);
+                camera.lookAt(preset.target.x, preset.target.y, preset.target.z);
+                currentCameraPreset = presetIndex;
+            }
+        }
+        
+        // Simulation functions
+        function resetSimulation() {
+            earthOrbitAngle = 0;
+            moonOrbitAngle = 0;
+            simulationSpeed = 1.0;
+            paused = false;
+            showOrbits = true;
+            showTrails = false;
+            negativeLighting = false;
+            setCameraPreset(0);
+            unhighlightAllSatellites();
+        }
+        
+        function highlightSatelliteClass(satelliteType) {
+            unhighlightAllSatellites();
+            
+            satellites.forEach(satellite => {
+                if (satellite.userData.type === satelliteType) {
+                    highlightSatellite(satellite);
+                    highlightedSatellites.push(satellite);
+                }
+            });
+        }
+        
+        function highlightSatellite(satellite) {
+            satellite.scale.set(2.5, 2.5, 2.5);
+            
+            const statusLight = satellite.userData.statusLight;
+            if (statusLight) {
+                statusLight.scale.set(3, 3, 3);
+                statusLight.material.opacity = 1.0;
+            }
+            
+            const trail = satellite.userData.trail;
+            if (trail && showTrails) {
+                trail.material.opacity = 1.0;
+                trail.material.linewidth = 3;
+            }
+        }
+        
+        function unhighlightAllSatellites() {
+            highlightedSatellites.forEach(satellite => {
+                satellite.scale.set(1, 1, 1);
+                
+                const statusLight = satellite.userData.statusLight;
+                if (statusLight) {
+                    statusLight.scale.set(1, 1, 1);
+                    statusLight.material.opacity = 0.8;
+                }
+                
+                const trail = satellite.userData.trail;
+                if (trail) {
+                    trail.material.opacity = 0.6;
+                    trail.material.linewidth = 1;
+                }
+            });
+            
+            highlightedSatellites = [];
+        }
+        
+        function toggleNegativeLighting() {
+            negativeLighting = !negativeLighting;
+            
+            if (negativeLighting) {
+                scene.background = new THREE.Color(0xffffff);
+                
+                sun.children.forEach(child => {
+                    if (child.material) {
+                        if (child.material.color) {
+                            child.material.color.setHex(0x000055);
+                        }
+                    }
+                });
+                
+                if (window.sunFlames) {
+                    window.sunFlames.forEach(flame => {
+                        flame.material.color.setHex(0x000044);
+                    });
+                }
+                
+                sunLight.color.setHex(0x000000);
+                
+                if (window.starField) {
+                    window.starField.material.color.setHex(0x000000);
+                    window.starField.material.blending = THREE.SubtractiveBlending;
+                }
+                
+                Object.keys(planets).forEach(planetKey => {
+                    const planet = planets[planetKey];
+                    if (planet) {
+                        if (planetKey === 'saturn') {
+                            planet.children[0].material.color.setHex(0x111111);
+                            planet.children[1].material.color.setHex(0x222222);
+                        } else {
+                            planet.material.color.setHex(0x111111);
+                        }
+                    }
+                });
+                
+            } else {
+                scene.background = new THREE.Color(0x000011);
+                
+                sun.children.forEach((child, index) => {
+                    if (child.material && child.material.color) {
+                        if (index === 0) {
+                            child.material.color.setHex(0xffff00);
+                        } else {
+                            child.material.color.setHex(0xffaa00);
+                        }
+                    }
+                });
+                
+                if (window.sunFlames) {
+                    const colors = [0xff4400, 0xff6600, 0xff8800, 0xffaa00, 0xffcc00];
+                    window.sunFlames.forEach((flame, index) => {
+                        flame.material.color.setHex(colors[index] || 0xffaa00);
+                    });
+                }
+                
+                sunLight.color.setHex(0xffffff);
+                
+                if (window.starField) {
+                    window.starField.material.color.setHex(0xffffff);
+                    window.starField.material.blending = THREE.AdditiveBlending;
+                }
+                
+                Object.keys(planetData).forEach(planetKey => {
+                    const planet = planets[planetKey];
+                    const data = planetData[planetKey];
+                    if (planet && data) {
+                        if (planetKey === 'saturn') {
+                            planet.children[0].material.color.setHex(data.color);
+                            planet.children[1].material.color.setHex(0xffddaa);
+                        } else {
+                            planet.material.color.setHex(data.color);
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Event handlers
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function onKeyDown(event) {
+            switch (event.code) {
+                case 'Space':
+                    event.preventDefault();
+                    paused ? startSim() : pauseSim();
+                    break;
+                case 'KeyR':
+                    resetSim();
+                    break;
+            }
+        }
+        
+        // Helper function to update UI elements (referenced by API)
+        function updateUI() {
+            // Update any UI elements as needed
+        }
+        
+        // Load the API script and initialize
+        async function loadSimulation() {
+            try {
+                // Load the API script
+                const script = document.createElement('script');
+                script.src = '../sat-sol-sim.js';
+                script.onload = function() {
+                    // Initialize the simulation after API loads
+                    init();
+                };
+                script.onerror = function() {
+                    document.getElementById('api-status').innerHTML = 
+                        '<span class="error">❌ Failed to load API</span>';
+                };
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                console.error('Failed to load simulation:', error);
+                document.getElementById('api-status').innerHTML = 
+                    '<span class="error">❌ Failed to load simulation</span>';
+            }
+        }
+        
+        // Demo control functions
+        function startSim() {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.simulation.start();
+                log('Started simulation');
+            }
+        }
+        
+        function pauseSim() {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.simulation.pause();
+                log('Paused simulation');
+            }
+        }
+        
+        function resetSim() {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.simulation.reset();
+                log('Reset simulation');
+            }
+        }
+        
+        function setSpd(speed) {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.simulation.setSpeed(speed);
+                log(`Speed set to ${speed}x`);
+            }
+        }
+        
+        function setCam(preset) {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.camera.setPreset(preset);
+                const presets = ['Sun', 'Close', 'Earth', 'Moon', 'Sat', 'System', 'Polar', 'Random'];
+                log(`Camera: ${presets[preset]}`);
+            }
+        }
+        
+        function hlSat(type) {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.satellites.highlight(type);
+                log(`Highlighted ${type}`);
+            }
+        }
+        
+        function clearHL() {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.satellites.unhighlight();
+                log('Cleared highlights');
+            }
+        }
+        
+        function failSat() {
+            if (window.SolarSystemAPI) {
+                SolarSystemAPI.satellites.failRandom();
+                log('Random satellite failed');
+            }
+        }
+        
+        function showStats() {
+            if (window.SolarSystemAPI) {
+                const operational = SolarSystemAPI.satellites.getOperational();
+                const failed = SolarSystemAPI.satellites.getFailed();
+                alert(`Satellite Statistics:\n\nOperational: ${operational.length}\nFailed: ${failed.length}\nTotal: ${operational.length + failed.length}`);
+                log('Showed satellite statistics');
+            }
+        }
+        
+        function togOrbits() {
+            if (window.SolarSystemAPI) {
+                const state = SolarSystemAPI.visuals.getVisualState();
+                if (state.orbits) {
+                    SolarSystemAPI.visuals.hideOrbits();
+                    log('Hidden orbits');
+                } else {
+                    SolarSystemAPI.visuals.showOrbits();
+                    log('Shown orbits');
+                }
+            }
+        }
+        
+        function togTrails() {
+            if (window.SolarSystemAPI) {
+                const state = SolarSystemAPI.visuals.getVisualState();
+                if (state.trails) {
+                    SolarSystemAPI.visuals.hideTrails();
+                    log('Hidden trails');
+                } else {
+                    SolarSystemAPI.visuals.showTrails();
+                    log('Shown trails');
+                }
+            }
+        }
+        
+        function togUI() {
+            if (window.SolarSystemAPI) {
+                const state = SolarSystemAPI.visuals.getVisualState();
+                if (state.ui) {
+                    SolarSystemAPI.visuals.hideUI();
+                    log('Hidden UI');
+                } else {
+                    SolarSystemAPI.visuals.showUI();
+                    log('Shown UI');
+                }
+            }
+        }
+        
+        function togNeg() {
+            if (window.SolarSystemAPI) {
+                const state = SolarSystemAPI.visuals.getVisualState();
+                if (state.negative) {
+                    SolarSystemAPI.visuals.disableNegativeMode();
+                    log('Disabled negative mode');
+                } else {
+                    SolarSystemAPI.visuals.enableNegativeMode();
+                    log('Enabled negative mode');
+                }
+            }
+        }
+        
+        function takeScreenshot() {
+            if (window.SolarSystemAPI) {
+                const screenshot = SolarSystemAPI.utils.takeScreenshot();
+                if (screenshot) {
+                    const link = document.createElement('a');
+                    link.download = 'solar-system-screenshot.png';
+                    link.href = screenshot;
+                    link.click();
+                    log('Screenshot saved');
+                }
+            }
+        }
+        
+        function exportConfig() {
+            if (window.SolarSystemAPI) {
+                const config = SolarSystemAPI.utils.exportConfiguration();
+                const blob = new Blob([JSON.stringify(config, null, 2)], {type: 'application/json'});
+                const link = document.createElement('a');
+                link.download = 'simulation-config.json';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                log('Configuration exported');
+            }
+        }
+        
+        function showSystemInfo() {
+            if (window.SolarSystemAPI) {
+                const info = SolarSystemAPI.utils.getSystemInfo();
+                console.log('System Information:', info);
+                alert(`System Information:\n\nAPI Version: ${info.version}\nSatellites: ${info.scene?.satellites || 0}\nPlanets: ${info.scene?.planets || 0}\nScene Objects: ${info.scene?.children || 0}`);
+                log('Showed system info');
+            }
+        }
+        
+        function runAutomation() {
+            if (window.SolarSystemAPI) {
+                log('Starting automated demo...');
+                
+                // Hide UI for clean demo
+                SolarSystemAPI.visuals.hideUI();
+                
+                // Automated sequence
+                setTimeout(() => {
+                    SolarSystemAPI.camera.setPreset(0);
+                    log('Demo: Sun View');
+                }, 1000);
+                
+                setTimeout(() => {
+                    SolarSystemAPI.camera.setPreset(2);
+                    log('Demo: Earth Close');
+                }, 3000);
+                
+                setTimeout(() => {
+                    SolarSystemAPI.satellites.highlight('LEO_COMM');
+                    log('Demo: Highlighting LEO Communications');
+                }, 5000);
+                
+                setTimeout(() => {
+                    SolarSystemAPI.camera.setPreset(4);
+                    log('Demo: Satellite View');
+                }, 7000);
+                
+                setTimeout(() => {
+                    SolarSystemAPI.visuals.showTrails();
+                    log('Demo: Showing trails');
+                }, 9000);
+                
+                setTimeout(() => {
+                    SolarSystemAPI.satellites.unhighlight();
+                    SolarSystemAPI.visuals.showUI();
+                    SolarSystemAPI.camera.setPreset(0);
+                    log('Demo complete - restored to default');
+                }, 12000);
+            }
+        }
+        
+        function toggleDemo() {
+            const overlay = document.getElementById('demo-overlay');
+            overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function startStatusUpdates() {
+            setInterval(() => {
+                if (window.SolarSystemAPI) {
+                    const state = SolarSystemAPI.simulation.getState();
+                    const presets = ['Sun', 'Close', 'Earth', 'Moon', 'Sat', 'System', 'Polar', 'Random'];
+                    const currentPreset = SolarSystemAPI.camera.getCurrentPreset();
+                    const satellites = SolarSystemAPI.satellites.getAll();
+                    
+                    document.getElementById('speed').textContent = state.speed + 'x';
+                    document.getElementById('camera').textContent = presets[currentPreset] || 'Unknown';
+                    document.getElementById('sats').textContent = satellites.length;
+                    document.getElementById('state').textContent = state.paused ? 'Paused' : 'Running';
+                }
+            }, 1000);
+        }
+        
+        function log(message) {
+            console.log(`[Demo] ${message}`);
+        }
+        
+        // Load simulation on page load
+        window.addEventListener('load', loadSimulation);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    if (window.SolarSystemAPI) {
+                        const state = SolarSystemAPI.simulation.getState();
+                        state.paused ? startSim() : pauseSim();
+                    }
+                    break;
+                case 'KeyH':
+                    toggleDemo();
+                    break;
+                case 'KeyR':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        resetSim();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

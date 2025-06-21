@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sat-Sol-Sim API Documentation | Professional Solar System Simulation</title>
+    <meta name="description" content="Complete API documentation for the Sat-Sol-Sim solar system simulation with satellite constellation modeling, orbital mechanics, and space visualization.">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #001122;
+            color: #00ff00;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="0.3" fill="white" opacity="0.6"/><circle cx="30" cy="25" r="0.2" fill="white" opacity="0.4"/><circle cx="50" cy="15" r="0.25" fill="white" opacity="0.5"/><circle cx="70" cy="35" r="0.15" fill="white" opacity="0.3"/><circle cx="85" cy="20" r="0.2" fill="white" opacity="0.4"/><circle cx="20" cy="40" r="0.25" fill="white" opacity="0.5"/><circle cx="60" cy="50" r="0.15" fill="white" opacity="0.3"/><circle cx="40" cy="70" r="0.2" fill="white" opacity="0.4"/><circle cx="80" cy="60" r="0.25" fill="white" opacity="0.5"/><circle cx="15" cy="80" r="0.15" fill="white" opacity="0.3"/></svg>') repeat;
+            z-index: -1;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.2; }
+        }
+        
+        header {
+            background: rgba(0, 17, 34, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #00ff00;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-decoration: none;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            color: #00ff00;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-content {
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #00ff88;
+            line-height: 1.2;
+        }
+
+        .header .version {
+            font-size: 1.2rem;
+            color: #00ccff;
+            opacity: 0.9;
+        }
+
+        .nav-menu {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .nav-menu a {
+            color: #00ff00;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(0, 255, 0, 0.2);
+            text-shadow: 0 0 5px #00ff00;
+            transform: translateY(-2px);
+        }
+
+        .content {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+            padding-bottom: 30px;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section h2 {
+            color: #00ff88;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .section h3 {
+            color: #00ccff;
+            font-size: 1.5rem;
+            margin: 25px 0 15px 0;
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        .section h4 {
+            color: #00ff00;
+            font-size: 1.2rem;
+            margin: 20px 0 10px 0;
+        }
+
+        .method-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .method-name {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        .method-description {
+            margin-bottom: 15px;
+            color: #00ff00;
+            opacity: 0.8;
+        }
+
+        .parameters, .returns {
+            margin: 10px 0;
+            color: #00ff00;
+        }
+
+        .parameters strong, .returns strong {
+            color: #00ccff;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            color: #00ff00;
+        }
+
+        .code-block::before {
+            content: "JavaScript";
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 0.8rem;
+            color: #00ccff;
+            opacity: 0.6;
+        }
+
+        .code-block pre {
+            margin: 0;
+            color: #00ff00;
+        }
+
+        .demo-links {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .demo-link {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .demo-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px #00ff88;
+            background: rgba(0, 255, 136, 0.3);
+        }
+
+        .example-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #00ccff;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .example-title {
+            color: #00ccff;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid #00ff00;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+
+        th {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff88;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        tr:hover {
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .highlight {
+            color: #00ff88;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        .terminal-prompt {
+            color: #00ccff;
+        }
+
+        .terminal-command {
+            color: #00ff88;
+        }
+
+        .terminal-comment {
+            color: #888;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #00ff00;
+            padding: 3rem 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #00ccff;
+            text-decoration: none;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .footer-links a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-menu {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .demo-links {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    
+    <header>
+        <nav>
+            <a href="index.html" class="logo">🛰️ Sat-Sol-Sim</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="satellite_simulation.html">Simulation</a></li>
+                <li><a href="satellite-info.html">Satellite Info</a></li>
+                <li><a href="demo/">Demos</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>📚 API Documentation</h1>
+                <div class="version">Sat-Sol-Sim v1.0.0 | Professional Solar System Simulation</div>
+            </div>
+
+            <div class="nav-menu">
+                <a href="#overview">Overview</a>
+                <a href="#quick-start">Quick Start</a>
+                <a href="#simulation">Simulation</a>
+                <a href="#camera">Camera</a>
+                <a href="#satellites">Satellites</a>
+                <a href="#visuals">Visuals</a>
+                <a href="#events">Events</a>
+                <a href="#utils">Utils</a>
+                <a href="#examples">Examples</a>
+                <a href="#swagger">API Spec</a>
+            </div>
+
+            <div class="content">
+                <section id="overview" class="section">
+                    <h2>🚀 Overview</h2>
+                    <p>The Solar System API provides comprehensive programmatic control over the 3D Solar System Satellite Simulation. This powerful API enables developers to create custom applications, automate simulations, build educational tools, and create immersive space experiences.</p>
+                    
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li>🎮 <strong>Chainable Methods</strong> - Fluent interface for easy scripting</li>
+                        <li>📷 <strong>Advanced Camera System</strong> - 8 preset positions plus free camera mode</li>
+                        <li>🛰️ <strong>Satellite Management</strong> - Control 5 different satellite types</li>
+                        <li>🎨 <strong>Visual Effects</strong> - Orbits, trails, negative mode, UI controls</li>
+                        <li>🔔 <strong>Event System</strong> - Real-time event notifications</li>
+                        <li>💾 <strong>Configuration Management</strong> - Save/load complete simulation states</li>
+                    </ul>
+
+                    <div class="demo-links">
+                        <a href="demo/api-playground.html" class="demo-link">🎮 Interactive Playground</a>
+                        <a href="demo/basic-control.html" class="demo-link">📝 Basic Examples</a>
+                        <a href="demo/camera-tour.html" class="demo-link">📷 Camera Tour</a>
+                        <a href="swagger-ui.html" class="demo-link">📋 Swagger UI</a>
+                    </div>
+                </section>
+
+                <section id="quick-start" class="section">
+                    <h2>⚡ Quick Start</h2>
+                    
+                    <h3>Installation</h3>
+                    <div class="code-block">
+&lt;!-- Include after the main simulation --&gt;
+&lt;script src="sat-sol-sim.js"&gt;&lt;/script&gt;
+&lt;!-- Or use minified version --&gt;
+&lt;script src="sat-sol-sim.min.js"&gt;&lt;/script&gt;
+                    </div>
+
+                    <h3>Basic Usage</h3>
+                    <div class="code-block">
+// All methods are chainable for fluid programming
+SolarSystemAPI
+    .simulation.setSpeed(2.0)
+    .camera.setPreset(3)
+    .visuals.showTrails()
+    .satellites.highlight('LEO_COMM');
+
+// Event-driven programming
+SolarSystemAPI.events.on('initialized', function(data) {
+    console.log('🌟 Simulation ready!', data);
+    
+    // Start your custom logic here
+    SolarSystemAPI.simulation.start();
+});
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">💡 Pro Tip</div>
+                        <p>The API is designed for method chaining. You can combine multiple operations in a single fluent call for cleaner, more readable code.</p>
+                    </div>
+                </section>
+
+                <section id="simulation" class="section">
+                    <h2>🎮 Simulation Control</h2>
+                    <p>Control the core simulation state, timing, and playback with <code>SolarSystemAPI.simulation</code>.</p>
+
+                    <div class="method-card">
+                        <div class="method-name">start()</div>
+                        <div class="method-description">Starts or resumes the simulation</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+SolarSystemAPI.simulation.start();
+                        </div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">pause()</div>
+                        <div class="method-description">Pauses the simulation</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">setSpeed(speed)</div>
+                        <div class="method-description">Sets the simulation speed multiplier</div>
+                        <div class="parameters"><strong>Parameters:</strong> speed (number) - Speed multiplier between 0.1 and 3.0</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+// Slow motion
+SolarSystemAPI.simulation.setSpeed(0.5);
+
+// Double speed
+SolarSystemAPI.simulation.setSpeed(2.0);
+
+// Maximum speed
+SolarSystemAPI.simulation.setSpeed(3.0);
+                        </div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">getState()</div>
+                        <div class="method-description">Gets comprehensive simulation state information</div>
+                        <div class="returns"><strong>Returns:</strong> Object with simulation state details</div>
+                        <div class="code-block">
+const state = SolarSystemAPI.simulation.getState();
+console.log('Current state:', state);
+// Returns: { paused: false, speed: 1.0, earthOrbitAngle: 45.2, ... }
+                        </div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">🎯 Example: Automated Simulation Control</div>
+                        <div class="code-block">
+// Create an automated simulation sequence
+function runAutomatedDemo() {
+    SolarSystemAPI.simulation
+        .setSpeed(0.5)          // Start slow
+        .start();
+    
+    setTimeout(() => {
+        SolarSystemAPI.simulation.setSpeed(2.0); // Speed up
+    }, 5000);
+    
+    setTimeout(() => {
+        SolarSystemAPI.simulation.pause();       // Pause for analysis
+    }, 10000);
+}
+
+// Run the demo
+runAutomatedDemo();
+                        </div>
+                    </div>
+
+                    <div class="demo-links">
+                        <a href="demo/basic-control.html#simulation" class="demo-link">🎮 Try Simulation Controls</a>
+                    </div>
+                </section>
+
+                <section id="camera" class="section">
+                    <h2>📷 Camera System</h2>
+                    <p>Advanced camera control with presets, free movement, and tracking modes via <code>SolarSystemAPI.camera</code>.</p>
+
+                    <h3>Camera Presets</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Use Case</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td>Sun View</td>
+                                    <td>Default view from Sun to Earth</td>
+                                    <td>Overview of Earth-Moon system</td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Sun Close</td>
+                                    <td>75% closer to Earth from Sun</td>
+                                    <td>Detailed Earth observation</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Earth Close</td>
+                                    <td>Close orbit around Earth</td>
+                                    <td>Satellite constellation analysis</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Moon View</td>
+                                    <td>From Moon looking at Earth</td>
+                                    <td>Lunar perspective</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Orbital View</td>
+                                    <td>Satellite constellation overview</td>
+                                    <td>Communication network analysis</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>Solar System</td>
+                                    <td>Wide view of entire solar system</td>
+                                    <td>Cosmic perspective</td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>Earth Polar</td>
+                                    <td>View from Earth's north pole</td>
+                                    <td>Polar orbit visualization</td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>Random Satellite</td>
+                                    <td>Random satellite perspective</td>
+                                    <td>Satellite POV experience</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">setPreset(presetIndex)</div>
+                        <div class="method-description">Sets camera to a specific preset position</div>
+                        <div class="parameters"><strong>Parameters:</strong> presetIndex (number) - Preset index (0-7)</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+// Cinematic camera tour
+SolarSystemAPI.camera.setPreset(5); // Solar system view
+setTimeout(() => SolarSystemAPI.camera.setPreset(2), 2000); // Earth close
+setTimeout(() => SolarSystemAPI.camera.setPreset(7), 4000); // Satellite view
+                        </div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">enableFreeMode() / disableFreeMode()</div>
+                        <div class="method-description">Enables/disables free camera mode for manual control</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+// Enable free camera movement
+SolarSystemAPI.camera.enableFreeMode();
+
+// Position camera manually
+SolarSystemAPI.camera
+    .setPosition(100, 50, 200)
+    .lookAt(0, 0, 0);
+                        </div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">🎬 Example: Automated Camera Tour</div>
+                        <div class="code-block">
+function createCameraTour() {
+    const presets = [0, 1, 2, 3, 4, 5, 6, 7];
+    let currentPreset = 0;
+    
+    function nextPreset() {
+        SolarSystemAPI.camera.setPreset(presets[currentPreset]);
+        currentPreset = (currentPreset + 1) % presets.length;
+    }
+    
+    // Change camera every 3 seconds
+    setInterval(nextPreset, 3000);
+    nextPreset(); // Start immediately
+}
+
+// Launch the tour
+SolarSystemAPI.events.on('initialized', createCameraTour);
+                        </div>
+                    </div>
+
+                    <div class="demo-links">
+                        <a href="demo/camera-tour.html" class="demo-link">🎬 Automated Camera Tour</a>
+                        <a href="demo/api-playground.html#camera" class="demo-link">📷 Camera Controls</a>
+                    </div>
+                </section>
+
+                <section id="satellites" class="section">
+                    <h2>🛰️ Satellite Management</h2>
+                    <p>Comprehensive satellite constellation control with <code>SolarSystemAPI.satellites</code>.</p>
+
+                    <h3>Satellite Types</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Full Name</th>
+                                    <th>Orbit</th>
+                                    <th>Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>LEO_COMM</td>
+                                    <td>Low Earth Orbit Communications</td>
+                                    <td>160-2000 km</td>
+                                    <td>Internet, phone, data services</td>
+                                </tr>
+                                <tr>
+                                    <td>LEO_WEATHER</td>
+                                    <td>Weather Satellites</td>
+                                    <td>700-800 km</td>
+                                    <td>Weather monitoring, climate</td>
+                                </tr>
+                                <tr>
+                                    <td>MEO_NAV</td>
+                                    <td>Medium Earth Orbit Navigation</td>
+                                    <td>20,000 km</td>
+                                    <td>GPS, GLONASS, Galileo</td>
+                                </tr>
+                                <tr>
+                                    <td>GEO_COMM</td>
+                                    <td>Geostationary Communications</td>
+                                    <td>35,786 km</td>
+                                    <td>TV, radio, telecommunications</td>
+                                </tr>
+                                <tr>
+                                    <td>MILITARY</td>
+                                    <td>Military/Reconnaissance</td>
+                                    <td>Various</td>
+                                    <td>Defense, surveillance, intelligence</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">getAll()</div>
+                        <div class="method-description">Gets detailed information about all satellites</div>
+                        <div class="returns"><strong>Returns:</strong> Array of satellite objects</div>
+                        <div class="code-block">
+const satellites = SolarSystemAPI.satellites.getAll();
+console.log(`Total satellites: ${satellites.length}`);
+
+satellites.forEach(sat => {
+    console.log(`${sat.type}: ${sat.status} (Health: ${sat.health}%)`);
+});
+                        </div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">highlight(type) / unhighlight()</div>
+                        <div class="method-description">Highlights satellites of a specific type or removes all highlighting</div>
+                        <div class="parameters"><strong>Parameters:</strong> type (string) - Satellite type to highlight</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+// Highlight communication satellites
+SolarSystemAPI.satellites.highlight('LEO_COMM');
+
+// Show GPS constellation
+SolarSystemAPI.satellites.highlight('MEO_NAV');
+
+// Clear all highlighting
+SolarSystemAPI.satellites.unhighlight();
+                        </div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">setConfiguration(config)</div>
+                        <div class="method-description">Sets satellite constellation configuration</div>
+                        <div class="parameters"><strong>Parameters:</strong> config (Object) - Configuration with satellite counts</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                        <div class="code-block">
+// Custom constellation setup
+SolarSystemAPI.satellites.setConfiguration({
+    LEO_COMM: 12,        // 12 communication satellites
+    LEO_WEATHER: 8,      // 8 weather satellites  
+    MEO_NAV: 24,         // 24 GPS satellites
+    GEO_COMM: 6,         // 6 geostationary satellites
+    MILITARY: 3          // 3 military satellites
+});
+                        </div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">🎯 Example: Satellite Constellation Analysis</div>
+                        <div class="code-block">
+function analyzeSatelliteNetwork() {
+    const satellites = SolarSystemAPI.satellites.getAll();
+    const byType = {};
+    
+    // Group satellites by type
+    satellites.forEach(sat => {
+        if (!byType[sat.type]) byType[sat.type] = [];
+        byType[sat.type].push(sat);
+    });
+    
+    // Analysis
+    Object.keys(byType).forEach(type => {
+        const sats = byType[type];
+        const operational = sats.filter(s => s.status === 'operational');
+        const avgHealth = sats.reduce((sum, s) => sum + s.health, 0) / sats.length;
+        
+        console.log(`${type}: ${operational.length}/${sats.length} operational, ${avgHealth.toFixed(1)}% avg health`);
+        
+        // Highlight if health is low
+        if (avgHealth < 80) {
+            SolarSystemAPI.satellites.highlight(type);
+        }
+    });
+}
+
+// Run analysis every 10 seconds
+setInterval(analyzeSatelliteNetwork, 10000);
+                        </div>
+                    </div>
+
+                    <div class="demo-links">
+                        <a href="demo/basic-control.html#satellites" class="demo-link">🛰️ Satellite Controls</a>
+                        <a href="demo/api-playground.html#satellites" class="demo-link">🎮 Constellation Builder</a>
+                    </div>
+                </section>
+
+                <section id="visuals" class="section">
+                    <h2>🎨 Visual Effects</h2>
+                    <p>Control visual elements and special effects with <code>SolarSystemAPI.visuals</code>.</p>
+
+                    <div class="method-card">
+                        <div class="method-name">showOrbits() / hideOrbits()</div>
+                        <div class="method-description">Shows/hides orbital rings for better spatial understanding</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">showTrails() / hideTrails()</div>
+                        <div class="method-description">Shows/hides satellite movement trails</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">enableNegativeMode() / disableNegativeMode()</div>
+                        <div class="method-description">Enables/disables negative lighting mode (inverted colors)</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">🌟 Example: Dynamic Visual Effects</div>
+                        <div class="code-block">
+// Create a visual effects sequence
+function createVisualShow() {
+    // Phase 1: Clean view
+    SolarSystemAPI.visuals
+        .hideOrbits()
+        .hideTrails()
+        .disableNegativeMode();
+    
+    setTimeout(() => {
+        // Phase 2: Show orbital structure
+        SolarSystemAPI.visuals.showOrbits();
+    }, 2000);
+    
+    setTimeout(() => {
+        // Phase 3: Add movement trails
+        SolarSystemAPI.visuals.showTrails();
+    }, 4000);
+    
+    setTimeout(() => {
+        // Phase 4: Dramatic negative mode
+        SolarSystemAPI.visuals.enableNegativeMode();
+    }, 6000);
+}
+
+// Combine with camera movement for cinematic effect
+function cinematicExperience() {
+    SolarSystemAPI.camera.setPreset(5); // Start with solar system view
+    createVisualShow();
+    
+    setTimeout(() => {
+        SolarSystemAPI.camera.setPreset(2); // Move to Earth close
+    }, 8000);
+}
+                        </div>
+                    </div>
+
+                    <div class="demo-links">
+                        <a href="demo/basic-control.html#visuals" class="demo-link">🎨 Visual Effects</a>
+                    </div>
+                </section>
+
+                <section id="events" class="section">
+                    <h2>🔔 Event System</h2>
+                    <p>React to simulation events with <code>SolarSystemAPI.events</code>.</p>
+
+                    <div class="method-card">
+                        <div class="method-name">on(eventName, callback)</div>
+                        <div class="method-description">Subscribe to simulation events</div>
+                        <div class="parameters"><strong>Parameters:</strong> eventName (string), callback (function)</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">⚡ Example: Event-Driven Application</div>
+                        <div class="code-block">
+// Listen for key simulation events
+SolarSystemAPI.events
+    .on('initialized', function(data) {
+        console.log('🚀 Simulation initialized', data);
+        startCustomLogic();
+    })
+    .on('satellite_failed', function(satellite) {
+        console.log('⚠️ Satellite failure:', satellite);
+        handleSatelliteFailure(satellite);
+    })
+    .on('configuration_changed', function(config) {
+        console.log('🔧 Configuration updated', config);
+        updateAnalytics(config);
+    });
+
+function startCustomLogic() {
+    // Your application logic here
+    SolarSystemAPI.simulation.start();
+}
+
+function handleSatelliteFailure(satellite) {
+    // Highlight failed satellite
+    SolarSystemAPI.satellites.highlight(satellite.type);
+    
+    // Show alert
+    alert(`Satellite ${satellite.id} has failed!`);
+}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="utils" class="section">
+                    <h2>🛠️ Utilities</h2>
+                    <p>Utility functions for configuration management and system info with <code>SolarSystemAPI.utils</code>.</p>
+
+                    <div class="method-card">
+                        <div class="method-name">exportConfiguration()</div>
+                        <div class="method-description">Export complete simulation configuration</div>
+                        <div class="returns"><strong>Returns:</strong> Object with complete configuration</div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">importConfiguration(config)</div>
+                        <div class="method-description">Import and apply configuration</div>
+                        <div class="parameters"><strong>Parameters:</strong> config (Object) - Configuration to apply</div>
+                        <div class="returns"><strong>Returns:</strong> this (chainable)</div>
+                    </div>
+
+                    <div class="method-card">
+                        <div class="method-name">takeScreenshot()</div>
+                        <div class="method-description">Take screenshot of current simulation</div>
+                        <div class="returns"><strong>Returns:</strong> Base64 encoded PNG image data URL</div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">💾 Example: Configuration Management</div>
+                        <div class="code-block">
+// Save current configuration
+function saveSimulationState() {
+    const config = SolarSystemAPI.utils.exportConfiguration();
+    localStorage.setItem('simulation_config', JSON.stringify(config));
+    console.log('Configuration saved!');
+}
+
+// Load saved configuration
+function loadSimulationState() {
+    const savedConfig = localStorage.getItem('simulation_config');
+    if (savedConfig) {
+        const config = JSON.parse(savedConfig);
+        SolarSystemAPI.utils.importConfiguration(config);
+        console.log('Configuration loaded!');
+    }
+}
+
+// Take and download screenshot
+function captureScreenshot() {
+    const dataURL = SolarSystemAPI.utils.takeScreenshot();
+    if (dataURL) {
+        const link = document.createElement('a');
+        link.download = 'solar-system-' + Date.now() + '.png';
+        link.href = dataURL;
+        link.click();
+    }
+}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="examples" class="section">
+                    <h2>💡 Advanced Examples</h2>
+
+                    <div class="example-box">
+                        <div class="example-title">🎓 Educational Presentation System</div>
+                        <div class="code-block">
+class EducationalPresentation {
+    constructor() {
+        this.slides = [
+            {
+                title: "Solar System Overview",
+                camera: 5,
+                visuals: { orbits: true, trails: false },
+                duration: 10000
+            },
+            {
+                title: "Earth and Moon",
+                camera: 0,
+                visuals: { orbits: true, trails: true },
+                duration: 8000
+            },
+            {
+                title: "Satellite Constellations",
+                camera: 2,
+                satellites: 'LEO_COMM',
+                visuals: { orbits: false, trails: true },
+                duration: 12000
+            }
+        ];
+        this.currentSlide = 0;
+    }
+    
+    start() {
+        this.showSlide(0);
+    }
+    
+    showSlide(index) {
+        const slide = this.slides[index];
+        
+        // Set camera
+        SolarSystemAPI.camera.setPreset(slide.camera);
+        
+        // Configure visuals
+        if (slide.visuals.orbits) {
+            SolarSystemAPI.visuals.showOrbits();
+        } else {
+            SolarSystemAPI.visuals.hideOrbits();
+        }
+        
+        if (slide.visuals.trails) {
+            SolarSystemAPI.visuals.showTrails();
+        } else {
+            SolarSystemAPI.visuals.hideTrails();
+        }
+        
+        // Highlight satellites
+        if (slide.satellites) {
+            SolarSystemAPI.satellites.highlight(slide.satellites);
+        }
+        
+        console.log(`📺 Slide ${index + 1}: ${slide.title}`);
+        
+        // Auto-advance
+        setTimeout(() => {
+            this.nextSlide();
+        }, slide.duration);
+    }
+    
+    nextSlide() {
+        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+        this.showSlide(this.currentSlide);
+    }
+}
+
+// Usage
+const presentation = new EducationalPresentation();
+SolarSystemAPI.events.on('initialized', () => presentation.start());
+                        </div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">📊 Performance Monitor</div>
+                        <div class="code-block">
+class PerformanceMonitor {
+    constructor() {
+        this.metrics = {
+            fps: [],
+            satellites: [],
+            timestamps: []
+        };
+        this.startTime = Date.now();
+    }
+    
+    start() {
+        setInterval(() => this.collect(), 1000);
+    }
+    
+    collect() {
+        const now = Date.now();
+        const satellites = SolarSystemAPI.satellites.getAll();
+        const systemInfo = SolarSystemAPI.utils.getSystemInfo();
+        
+        this.metrics.timestamps.push(now - this.startTime);
+        this.metrics.satellites.push(satellites.length);
+        
+        // Calculate operational percentage
+        const operational = satellites.filter(s => s.status === 'operational');
+        const operationalPercent = (operational.length / satellites.length * 100).toFixed(1);
+        
+        console.log(`📊 Performance Report:
+            Satellites: ${satellites.length} (${operationalPercent}% operational)
+            Runtime: ${((now - this.startTime) / 1000).toFixed(1)}s
+            Camera: Preset ${systemInfo.camera.preset}
+        `);
+        
+        // Alert if performance degrades
+        if (operationalPercent < 90) {
+            console.warn('⚠️ Satellite network degraded!');
+            SolarSystemAPI.satellites.highlight('failed');
+        }
+    }
+    
+    getReport() {
+        return {
+            runtime: Date.now() - this.startTime,
+            metrics: this.metrics,
+            averageSatellites: this.metrics.satellites.reduce((a, b) => a + b, 0) / this.metrics.satellites.length
+        };
+    }
+}
+
+// Usage
+const monitor = new PerformanceMonitor();
+SolarSystemAPI.events.on('initialized', () => monitor.start());
+                        </div>
+                    </div>
+                </section>
+
+                <div class="interactive-demo">
+                    <h3>🎮 Try the API Now!</h3>
+                    <p>Experience the Solar System API with our interactive demos and examples.</p>
+                    <div class="demo-links">
+                        <a href="demo/api-playground.html" class="btn">Interactive Playground</a>
+                        <a href="demo/basic-control.html" class="btn">Basic Examples</a>
+                        <a href="demo/camera-tour.html" class="btn">Camera Tour</a>
+                        <a href="swagger-ui.html" class="btn">API Specification</a>
+                    </div>
+                </div>
+
+                <div class="toc">
+                    <h3>📋 Table of Contents</h3>
+                    <ul>
+                        <li><a href="#overview">🚀 Overview</a></li>
+                        <li><a href="#quick-start">⚡ Quick Start</a></li>
+                        <li><a href="#simulation">🎮 Simulation Control</a></li>
+                        <li><a href="#camera">📷 Camera System</a></li>
+                        <li><a href="#satellites">🛰️ Satellite Management</a></li>
+                        <li><a href="#visuals">🎨 Visual Effects</a></li>
+                        <li><a href="#events">🔔 Event System</a></li>
+                        <li><a href="#utils">🛠️ Utilities</a></li>
+                        <li><a href="#examples">💡 Advanced Examples</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>🌟 Solar System API v1.0.0 | Made with ❤️ for space exploration</p>
+                <p>
+                    <a href="sat-sol-sim.js" style="color: white; margin: 0 10px;">📄 Full API</a>
+                    <a href="sat-sol-sim.min.js" style="color: white; margin: 0 10px;">📦 Minified</a>
+                    <a href="swagger.json" style="color: white; margin: 0 10px;">📋 OpenAPI Spec</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

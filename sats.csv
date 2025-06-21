@@ -1,0 +1,6 @@
+| Orbit Type            | Altitude Range               | Orbital Period         | Main Applications                                  | Example Satellites                                 | Current Count (Share)        |
+|-----------------------|-----------------------------|------------------------|----------------------------------------------------|----------------------------------------------------|------------------------------|
+| Low Earth Orbit (LEO) | 160–1,500 km                | 90–120 minutes         | Earth observation, remote sensing, scientific research | International Space Station, Earth observation satellites, many CubeSats | 6,768 (89.5%)                |
+| Medium Earth Orbit (MEO) | 5,000–20,000 km           | —                      | Navigation systems, communications                 | GPS, GLONASS, Galileo navigation satellites        | 143 (1.9%)                   |
+| Geostationary Earth Orbit (GEO) | ~36,000 km         | 24 hours (synchronous) | Telecommunications, weather, TV broadcasting       | GOES weather satellites, communications satellites | 590 (7.8%)                   |
+| Highly Elliptical Orbit (HEO) | Varies (high eccentricity) | —                 | Communications for high latitudes, specialized scientific missions | Molniya satellites                                 | 59 (0.8%)                    |

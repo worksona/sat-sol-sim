@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Satellite Orbital Simulation - Enhanced</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        .ui-panel {
+            color: #00ff00;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #00ff00;
+            z-index: 100;
+            font-size: 12px;
+            line-height: 1.4;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .ui-panel.hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            max-width: 300px;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            max-width: 300px;
+        }
+        
+        #camera-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 330px;
+            max-width: 340px;
+        }
+        
+        #satellite-config {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            max-width: 280px;
+        }
+        
+        #navigation-help {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 11px;
+            max-width: 200px;
+        }
+        
+        #ui-toggle {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 200;
+            transition: background-color 0.2s;
+        }
+        
+        #ui-toggle:hover {
+            background: rgba(0, 50, 0, 0.9);
+        }
+        
+        button {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 6px 10px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+        }
+        
+        button:hover {
+            background: #004400;
+        }
+        
+        button.active {
+            background: #006600;
+            border-color: #00ff88;
+        }
+        
+        #camera-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 3px;
+            margin-bottom: 8px;
+        }
+        
+        #camera-presets button {
+            font-size: 9px;
+            padding: 4px 6px;
+        }
+        
+        input {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 4px;
+            margin: 2px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            width: 50px;
+        }
+        
+        input[type="range"] {
+            width: 100px;
+            height: 15px;
+            background: #003300;
+        }
+        
+        .slider-value {
+            font-size: 9px;
+            color: #00ff88;
+            margin-left: 5px;
+            min-width: 30px;
+            display: inline-block;
+            text-align: right;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #00ff00;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .config-row {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            justify-content: space-between;
+        }
+        
+        .config-row label {
+            flex: 1;
+            font-size: 10px;
+        }
+        
+        .satellite-class-label {
+            cursor: pointer;
+            user-select: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .satellite-class-label:hover {
+            background-color: #004400;
+        }
+        
+        .satellite-class-label:active {
+            background-color: #006600;
+        }
+        
+        .status-fail { color: #ff3333; }
+        .status-comm { color: #3333ff; }
+        .status-nav { color: #ffff33; }
+        .status-weather { color: #33ffff; }
+        .status-military { color: #ff33ff; }
+    </style>
+</head>
+<body>
+    <div id="info" class="ui-panel">
+        <div><strong>SOLAR SYSTEM SIMULATION</strong></div>
+        <div id="satellite-count">Active Satellites: 0</div>
+        <div id="failed-count">Failed Satellites: 0</div>
+        <div id="camera-info">Camera: Sun View</div>
+        <div id="camera-mode">Mode: Preset | Follow: Off</div>
+        <div id="celestial-info">☀️ Sun | ☿ Mercury | ♀ Venus | 🌍 Earth | ♂ Mars | ♃ Jupiter | ♄ Saturn | ⛢ Uranus | ♆ Neptune</div>
+        <div id="selected-info">Click satellite for details</div>
+    </div>
+    
+    <div id="ui-toggle" onclick="toggleUI()">📋</div>
+    
+    <div id="controls" class="ui-panel">
+        <div><strong>SIMULATION CONTROLS</strong></div>
+        <button onclick="togglePause()">⏸️ PAUSE</button>
+        <button onclick="resetSimulation()">🔄 RESET</button>
+        <button onclick="randomFailure()">⚠️ RANDOM FAILURE</button><br>
+        <button onclick="toggleOrbits()">🌍 ORBITS</button>
+        <button onclick="toggleTrails()">✨ TRAILS</button><br>
+        <div class="config-row">
+            <label>Speed:</label>
+            <input type="range" id="simulation-speed" min="0.1" max="3" step="0.1" value="1" oninput="updateSimulationSpeed()">
+            <span id="speed-display">1.0x</span>
+        </div>
+    </div>
+    
+    <div id="camera-controls" class="ui-panel">
+        <div><strong>CAMERA CONTROLS</strong></div>
+        <div id="camera-presets">
+            <button onclick="setCameraPreset(0)" id="preset-0">☀️ Sun View</button>
+            <button onclick="setCameraPreset(1)" id="preset-1">🔥 Sun Close</button>
+            <button onclick="setCameraPreset(2)" id="preset-2">🌍 Earth Close</button>
+            <button onclick="setCameraPreset(3)" id="preset-3">🌙 Moon View</button>
+            <button onclick="setCameraPreset(4)" id="preset-4">🛰️ Orbital</button>
+            <button onclick="setCameraPreset(5)" id="preset-5">🌌 Solar System</button>
+            <button onclick="setCameraPreset(6)" id="preset-6">🧭 Polar</button>
+            <button onclick="setCameraPreset(7)" id="preset-7">🎲 Random Sat</button>
+        </div>
+        <button onclick="toggleFreeMode()" id="free-mode-btn">🎮 FREE MODE</button>
+        <button onclick="toggleFollowEarth()" id="follow-earth-btn">🌍 FOLLOW EARTH</button>
+        <button onclick="toggleNegativeLighting()" id="negative-btn">🌑 NEGATIVE</button>
+        <div style="font-size: 9px; margin-top: 5px; color: #888888;">Follow Earth: Camera tracks Earth's orbit<br>Works with Free Mode for manual control</div>
+    </div>
+    
+    <div id="satellite-config" class="ui-panel">
+        <div><strong>SATELLITE CONFIGURATION</strong></div>
+        <div style="font-size: 9px; margin-bottom: 8px; color: #888888;">Click & hold labels to highlight satellites</div>
+        <div class="config-row">
+            <label class="satellite-class-label" data-type="LEO_COMM" onmousedown="highlightSatelliteClass('LEO_COMM')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('LEO_COMM')" ontouchend="unhighlightAllSatellites()">LEO Comm:</label>
+            <input type="range" id="leo-comm" value="50" min="0" max="6768" step="10">
+            <span id="leo-comm-value" class="slider-value">50</span>
+        </div>
+        <div class="config-row">
+            <label class="satellite-class-label" data-type="LEO_WEATHER" onmousedown="highlightSatelliteClass('LEO_WEATHER')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('LEO_WEATHER')" ontouchend="unhighlightAllSatellites()">Weather:</label>
+            <input type="range" id="weather" value="25" min="0" max="1000" step="5">
+            <span id="weather-value" class="slider-value">25</span>
+        </div>
+        <div class="config-row">
+            <label class="satellite-class-label" data-type="MEO_NAV" onmousedown="highlightSatelliteClass('MEO_NAV')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('MEO_NAV')" ontouchend="unhighlightAllSatellites()">GPS/Nav:</label>
+            <input type="range" id="nav" value="32" min="0" max="143" step="1">
+            <span id="nav-value" class="slider-value">32</span>
+        </div>
+        <div class="config-row">
+            <label class="satellite-class-label" data-type="GEO_COMM" onmousedown="highlightSatelliteClass('GEO_COMM')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('GEO_COMM')" ontouchend="unhighlightAllSatellites()">GEO Comm:</label>
+            <input type="range" id="geo-comm" value="30" min="0" max="590" step="5">
+            <span id="geo-comm-value" class="slider-value">30</span>
+        </div>
+        <div class="config-row">
+            <label class="satellite-class-label" data-type="MILITARY" onmousedown="highlightSatelliteClass('MILITARY')" onmouseup="unhighlightAllSatellites()" onmouseleave="unhighlightAllSatellites()" ontouchstart="highlightSatelliteClass('MILITARY')" ontouchend="unhighlightAllSatellites()">Military:</label>
+            <input type="range" id="military" value="22" min="0" max="59" step="1">
+            <span id="military-value" class="slider-value">22</span>
+        </div>
+        <div class="config-row">
+            <label>Trail Length:</label>
+            <input type="number" id="trail-length" value="50" min="10" max="200">
+        </div>
+        <button onclick="applySatelliteConfig()">APPLY CONFIG</button>
+    </div>
+    
+    <div id="navigation-help" class="ui-panel">
+        <div><strong>NAVIGATION</strong></div>
+        <div><strong>Touch:</strong></div>
+        <div>• Drag: Look Around</div>
+        <div>• Pinch: Zoom In/Out</div>
+        <div>• Tap: Select Satellite</div>
+        <div><strong>Desktop:</strong></div>
+        <div>• Mouse: Look Around</div>
+        <div>• WASD: Move Camera</div>
+        <div>• Q/E: Up/Down</div>
+        <div>• Shift: Fast Mode</div>
+        <div>• Space: Reset View</div>
+    </div>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, earth, moon, sun, sunLight, earthSystem, satellites = [], orbitalRings = [], trails = [];
+        let paused = false, showOrbits = true, showTrails = false, autoCamera = false;
+        let selectedSatellite = null;
+        let mouse = new THREE.Vector2();
+        let raycaster = new THREE.Raycaster();
+        let cameraControls = { 
+            forward: false, backward: false, left: false, right: false, 
+            up: false, down: false, fast: false 
+        };
+        let maxTrailLength = 50;
+        let cameraRotation = { x: 0, y: 0 };
+        let mousePressed = false;
+        let simulationSpeed = 1.0;
+        let earthOrbitAngle = 0;
+        let moonOrbitAngle = 0;
+        let highlightedSatellites = [];
+        let currentCameraPreset = 0;
+        let freeMode = false;
+        let followEarth = false;
+        let uiVisible = true;
+        let earthFollowOffset = new THREE.Vector3();
+        let lastEarthPosition = new THREE.Vector3();
+        let negativeLighting = false;
+        let planets = {};
+        let planetAngles = {};
+        
+        // Planet data (scaled for visualization)
+        const planetData = {
+            mercury: { name: "Mercury", size: 0.15, distance: 20, speed: 0.001, color: 0x8c7853, tilt: 0.034 },
+            venus: { name: "Venus", size: 0.36, distance: 30, speed: 0.0007, color: 0xffc649, tilt: 177.4 },
+            mars: { name: "Mars", size: 0.2, distance: 70, speed: 0.0003, color: 0xcd5c5c, tilt: 25.19 },
+            jupiter: { name: "Jupiter", size: 4.2, distance: 120, speed: 0.00008, color: 0xd8ca9d, tilt: 3.13 },
+            saturn: { name: "Saturn", size: 3.5, distance: 180, speed: 0.00005, color: 0xfad5a5, tilt: 26.73 },
+            uranus: { name: "Uranus", size: 1.5, distance: 240, speed: 0.00003, color: 0x4fd0e3, tilt: 97.77 },
+            neptune: { name: "Neptune", size: 1.4, distance: 300, speed: 0.00002, color: 0x4b70dd, tilt: 28.32 }
+        };
+        
+        // Camera presets - predefined advantageous viewing positions
+        const cameraPresets = [
+            {
+                name: "Sun View",
+                description: "From Sun looking at Earth",
+                getPosition: () => {
+                    const sunPos = sun.position.clone();
+                    const earthPos = earthSystem.position.clone();
+                    const direction = earthPos.clone().sub(sunPos).normalize();
+                    return sunPos.clone().add(direction.multiplyScalar(8));
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Sun Close",
+                description: "75% closer to Earth from Sun",
+                getPosition: () => {
+                    const sunPos = sun.position.clone();
+                    const earthPos = earthSystem.position.clone();
+                    const direction = earthPos.clone().sub(sunPos).normalize();
+                    return sunPos.clone().add(direction.multiplyScalar(2)); // 75% closer (8 to 2)
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Earth Close",
+                description: "Close orbit around Earth",
+                getPosition: () => {
+                    const earthPos = earthSystem.position.clone();
+                    return earthPos.clone().add(new THREE.Vector3(8, 3, 8));
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Moon View",
+                description: "From Moon looking at Earth",
+                getPosition: () => {
+                    const moonWorldPos = new THREE.Vector3();
+                    moon.getWorldPosition(moonWorldPos);
+                    return moonWorldPos.clone();
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Orbital View",
+                description: "Satellite constellation overview",
+                getPosition: () => {
+                    const earthPos = earthSystem.position.clone();
+                    return earthPos.clone().add(new THREE.Vector3(15, 10, 15));
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Solar System",
+                description: "Wide view of Sun-Earth system",
+                getPosition: () => new THREE.Vector3(0, 50, 150),
+                getTarget: () => new THREE.Vector3(0, 0, 0)
+            },
+            {
+                name: "Earth Polar",
+                description: "View from Earth's pole",
+                getPosition: () => {
+                    const earthPos = earthSystem.position.clone();
+                    return earthPos.clone().add(new THREE.Vector3(0, 20, 0));
+                },
+                getTarget: () => earthSystem.position.clone()
+            },
+            {
+                name: "Random Satellite",
+                description: "Random satellite perspective",
+                getPosition: () => {
+                    const activeSatellites = satellites.filter(s => s.userData.status === 'operational');
+                    if (activeSatellites.length === 0) {
+                        const earthPos = earthSystem.position.clone();
+                        return earthPos.clone().add(new THREE.Vector3(8, 3, 8));
+                    }
+                    const randomSat = activeSatellites[Math.floor(Math.random() * activeSatellites.length)];
+                    const satWorldPos = new THREE.Vector3();
+                    randomSat.getWorldPosition(satWorldPos);
+                    return satWorldPos.clone().add(new THREE.Vector3(0.5, 0.3, 0.5));
+                },
+                getTarget: () => earthSystem.position.clone()
+            }
+        ];
+        
+        // Touch controls
+        let touchStart = { x: 0, y: 0 };
+        let touchCurrent = { x: 0, y: 0 };
+        let isTouching = false;
+        let touchCount = 0;
+        let initialPinchDistance = 0;
+        let currentPinchDistance = 0;
+        
+        // Satellite classes with orbital parameters and inclinations
+        const satelliteClasses = {
+            LEO_COMM: { 
+                altitude: 1.3, 
+                color: 0x3333ff, 
+                name: "LEO Communications", 
+                speed: 0.02,
+                inclinations: [0, 15, 30, 45, 60, 75, 90, 105]
+            },
+            LEO_WEATHER: { 
+                altitude: 1.5, 
+                color: 0x33ffff, 
+                name: "Weather Satellite", 
+                speed: 0.018,
+                inclinations: [90, 105, 98, 85]
+            },
+            MEO_NAV: { 
+                altitude: 2.5, 
+                color: 0xffff33, 
+                name: "Navigation (GPS)", 
+                speed: 0.01,
+                inclinations: [55, 55, 55, 55, 55, 55]
+            },
+            GEO_COMM: { 
+                altitude: 4.2, 
+                color: 0x3333ff, 
+                name: "GEO Communications", 
+                speed: 0.002,
+                inclinations: [0, 2, 1]
+            },
+            MILITARY: { 
+                altitude: 1.8, 
+                color: 0xff33ff, 
+                name: "Military/Recon", 
+                speed: 0.015,
+                inclinations: [28, 45, 63, 82, 97]
+            }
+        };
+        
+        // Initialize the simulation
+        function init() {
+            try {
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000011);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                // Will be set to Sun view after solar system is created
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.body.appendChild(renderer.domElement);
+                
+                // Create solar system
+                createSun();
+                createPlanets();
+                createEarthSystem();
+                
+                // Create orbital rings
+                createOrbitalRings();
+                
+                // Create satellites
+                createSatellites();
+                
+                // Create stars
+                createStars();
+                
+                // Add lighting
+                const ambientLight = new THREE.AmbientLight(0x202040, 0.2);
+                scene.add(ambientLight);
+                
+                // Set default camera to Sun view
+                setCameraPreset(0);
+                
+                // Initialize Earth tracking
+                lastEarthPosition.copy(earthSystem.position);
+                
+                // Initialize UI button states
+                updatePresetButtons();
+                updateFreeModeButton();
+                updateFollowEarthButton();
+                updateNegativeButton();
+                
+                // Add event listeners
+                window.addEventListener('resize', onWindowResize);
+                renderer.domElement.addEventListener('click', onMouseClick);
+                renderer.domElement.addEventListener('mousemove', onMouseMove);
+                renderer.domElement.addEventListener('mousedown', onMouseDown);
+                renderer.domElement.addEventListener('mouseup', onMouseUp);
+                window.addEventListener('keydown', onKeyDown);
+                window.addEventListener('keyup', onKeyUp);
+                
+                // Touch event listeners
+                renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+                renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+                renderer.domElement.addEventListener('touchend', onTouchEnd, { passive: false });
+                
+                // Disable context menu
+                renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+                
+                // Start animation
+                animate();
+                
+                console.log('Simulation initialized successfully');
+            } catch (error) {
+                console.error('Error initializing simulation:', error);
+            }
+        }
+        
+        function createSun() {
+            // Create Sun group for all flame layers
+            sun = new THREE.Group();
+            sun.position.set(0, 0, 0);
+            scene.add(sun);
+            
+            // Create main sun core
+            const coreGeometry = new THREE.SphereGeometry(2.5, 32, 32);
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffff00,
+                transparent: false
+            });
+            const sunCore = new THREE.Mesh(coreGeometry, coreMaterial);
+            sun.add(sunCore);
+            
+            // Create multiple flame layers with different sizes and colors
+            window.sunFlames = [];
+            const flameCount = 5;
+            const colors = [0xff4400, 0xff6600, 0xff8800, 0xffaa00, 0xffcc00];
+            const sizes = [3.0, 3.3, 3.6, 3.9, 4.2];
+            const opacities = [0.4, 0.3, 0.25, 0.2, 0.15];
+            
+            for (let i = 0; i < flameCount; i++) {
+                const flameGeometry = new THREE.SphereGeometry(sizes[i], 16, 16);
+                const flameMaterial = new THREE.MeshBasicMaterial({
+                    color: colors[i],
+                    transparent: true,
+                    opacity: opacities[i],
+                    blending: THREE.AdditiveBlending
+                });
+                
+                const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+                flame.userData = {
+                    originalScale: 1,
+                    animationOffset: Math.random() * Math.PI * 2,
+                    animationSpeed: 0.2 + Math.random() * 0.3
+                };
+                
+                sun.add(flame);
+                window.sunFlames.push(flame);
+            }
+            
+            // Add outer glow effect
+            const glowGeometry = new THREE.SphereGeometry(5, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffaa00,
+                transparent: true,
+                opacity: 0.1,
+                blending: THREE.AdditiveBlending,
+                side: THREE.BackSide
+            });
+            const sunGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+            sun.add(sunGlow);
+            
+            // Create sun light that will point toward Earth
+            sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            sunLight.position.set(0, 0, 0);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 2048;
+            sunLight.shadow.mapSize.height = 2048;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 500;
+            sunLight.shadow.camera.left = -50;
+            sunLight.shadow.camera.right = 50;
+            sunLight.shadow.camera.top = 50;
+            sunLight.shadow.camera.bottom = -50;
+            scene.add(sunLight);
+        }
+        
+        function createPlanets() {
+            Object.keys(planetData).forEach(planetKey => {
+                const data = planetData[planetKey];
+                
+                // Create planet geometry
+                const planetGeometry = new THREE.SphereGeometry(data.size, 32, 32);
+                
+                // Create textured material
+                const planetMaterial = new THREE.MeshPhongMaterial({
+                    color: data.color,
+                    shininess: 10,
+                    transparent: false
+                });
+                
+                // Add some texture variation
+                if (planetKey === 'jupiter') {
+                    // Jupiter stripes effect
+                    planetMaterial.bumpScale = 0.05;
+                } else if (planetKey === 'saturn') {
+                    // Saturn rings
+                    const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+                    
+                    // Create rings
+                    const ringGeometry = new THREE.RingGeometry(data.size * 1.2, data.size * 2.2, 64);
+                    const ringMaterial = new THREE.MeshBasicMaterial({
+                        color: 0xffddaa,
+                        transparent: true,
+                        opacity: 0.6,
+                        side: THREE.DoubleSide
+                    });
+                    const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+                    rings.rotation.x = Math.PI / 2;
+                    
+                    const planetGroup = new THREE.Group();
+                    planetGroup.add(planet);
+                    planetGroup.add(rings);
+                    
+                    // Position planet
+                    planetGroup.position.x = data.distance;
+                    planetGroup.receiveShadow = true;
+                    planetGroup.castShadow = true;
+                    
+                    // Apply axial tilt
+                    planetGroup.rotation.z = (data.tilt * Math.PI) / 180;
+                    
+                    planets[planetKey] = planetGroup;
+                    planetAngles[planetKey] = Math.random() * Math.PI * 2; // Random starting position
+                    scene.add(planetGroup);
+                    return;
+                }
+                
+                const planet = new THREE.Mesh(planetGeometry, planetMaterial);
+                planet.position.x = data.distance;
+                planet.receiveShadow = true;
+                planet.castShadow = true;
+                
+                // Apply axial tilt
+                planet.rotation.z = (data.tilt * Math.PI) / 180;
+                
+                planets[planetKey] = planet;
+                planetAngles[planetKey] = Math.random() * Math.PI * 2; // Random starting position
+                scene.add(planet);
+            });
+        }
+        
+        function createEarthSystem() {
+            // Create Earth system group
+            earthSystem = new THREE.Group();
+            earthSystem.position.set(50, 0, 0); // Distance from Sun
+            scene.add(earthSystem);
+            
+            // Create Earth
+            const earthGeometry = new THREE.SphereGeometry(1, 64, 64);
+            
+            // Load Earth texture
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load(
+                './earth-texture.jpg',
+                function(texture) {
+                    console.log('Earth texture loaded successfully');
+                },
+                function(progress) {
+                    console.log('Loading earth texture:', (progress.loaded / progress.total * 100) + '%');
+                },
+                function(error) {
+                    console.log('Error loading earth texture, using fallback color');
+                }
+            );
+            
+            const earthMaterial = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                color: 0xffffff
+            });
+            earth = new THREE.Mesh(earthGeometry, earthMaterial);
+            earth.receiveShadow = true;
+            earth.castShadow = true;
+            earthSystem.add(earth);
+            
+            // Add atmosphere glow
+            const atmosphereGeometry = new THREE.SphereGeometry(1.05, 32, 32);
+            const atmosphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x88ccff,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+            earthSystem.add(atmosphere);
+            
+            // Create Moon
+            const moonGeometry = new THREE.SphereGeometry(0.27, 32, 32);
+            const moonMaterial = new THREE.MeshPhongMaterial({
+                color: 0xaaaaaa
+            });
+            moon = new THREE.Mesh(moonGeometry, moonMaterial);
+            moon.position.set(3.8, 0, 0); // Distance from Earth
+            moon.receiveShadow = true;
+            moon.castShadow = true;
+            earthSystem.add(moon);
+        }
+        
+        function createOrbitalRings() {
+            // Clear existing rings
+            orbitalRings.forEach(ring => scene.remove(ring));
+            orbitalRings = [];
+            
+            Object.values(satelliteClasses).forEach(satClass => {
+                satClass.inclinations.forEach((inclination, index) => {
+                    const ringGeometry = new THREE.RingGeometry(satClass.altitude - 0.02, satClass.altitude + 0.02, 64);
+                    const ringMaterial = new THREE.MeshBasicMaterial({
+                        color: satClass.color,
+                        transparent: true,
+                        opacity: 0.15,
+                        side: THREE.DoubleSide
+                    });
+                    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                    
+                    // Apply inclination
+                    ring.rotation.x = (inclination * Math.PI) / 180;
+                    ring.rotation.z = (index * 30 * Math.PI) / 180;
+                    
+                    orbitalRings.push(ring);
+                    earthSystem.add(ring);
+                });
+            });
+        }
+        
+        function createSatellites() {
+            // Clear existing satellites and trails
+            satellites.forEach(satellite => scene.remove(satellite));
+            trails.forEach(trail => scene.remove(trail));
+            satellites = [];
+            trails = [];
+            
+            // Get counts from UI
+            const counts = {
+                LEO_COMM: parseInt(document.getElementById('leo-comm').value) || 0,
+                LEO_WEATHER: parseInt(document.getElementById('weather').value) || 0,
+                MEO_NAV: parseInt(document.getElementById('nav').value) || 0,
+                GEO_COMM: parseInt(document.getElementById('geo-comm').value) || 0,
+                MILITARY: parseInt(document.getElementById('military').value) || 0
+            };
+            
+            maxTrailLength = parseInt(document.getElementById('trail-length').value) || 50;
+            
+            Object.entries(counts).forEach(([type, count]) => {
+                for (let i = 0; i < count; i++) {
+                    createSatellite(type, i, count);
+                }
+            });
+            
+            updateSatelliteCount();
+        }
+        
+        function createSatellite(type, index, total) {
+            const satClass = satelliteClasses[type];
+            
+            // Create satellite geometry
+            const satelliteGroup = new THREE.Group();
+            
+            // Main body
+            const bodyGeometry = new THREE.BoxGeometry(0.06, 0.04, 0.08);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            satelliteGroup.add(body);
+            
+            // Solar panels
+            const panelGeometry = new THREE.BoxGeometry(0.15, 0.02, 0.08);
+            const panelMaterial = new THREE.MeshPhongMaterial({ color: 0x000066 });
+            const panel1 = new THREE.Mesh(panelGeometry, panelMaterial);
+            panel1.position.x = 0.1;
+            const panel2 = new THREE.Mesh(panelGeometry, panelMaterial);
+            panel2.position.x = -0.1;
+            satelliteGroup.add(panel1, panel2);
+            
+            // Antenna
+            const antennaGeometry = new THREE.CylinderGeometry(0.005, 0.005, 0.08);
+            const antennaMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00 });
+            const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+            antenna.position.y = 0.06;
+            satelliteGroup.add(antenna);
+            
+            // Position satellite in 3D orbit
+            const angleStep = (Math.PI * 2) / (total || 1);
+            const baseAngle = index * angleStep;
+            const inclination = satClass.inclinations[index % satClass.inclinations.length];
+            const ascendingNode = (index * 60) % 360;
+            
+            const orbitRadius = satClass.altitude;
+            
+            // Calculate initial position with inclination
+            const pos = calculateOrbitalPosition(baseAngle, orbitRadius, inclination, ascendingNode);
+            satelliteGroup.position.copy(pos);
+            
+            // Add status indicator light
+            const lightGeometry = new THREE.SphereGeometry(0.01, 8, 8);
+            const lightMaterial = new THREE.MeshBasicMaterial({ 
+                color: satClass.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            const statusLight = new THREE.Mesh(lightGeometry, lightMaterial);
+            statusLight.position.y = 0.03;
+            satelliteGroup.add(statusLight);
+            
+            // Create trail
+            const trailGeometry = new THREE.BufferGeometry();
+            const trailPositions = new Float32Array(maxTrailLength * 3);
+            trailGeometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            
+            const trailMaterial = new THREE.LineBasicMaterial({
+                color: satClass.color,
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            trail.visible = showTrails;
+            trails.push(trail);
+            scene.add(trail);
+            
+            // Satellite properties
+            satelliteGroup.userData = {
+                type: type,
+                class: satClass,
+                angle: baseAngle,
+                orbitRadius: orbitRadius,
+                inclination: inclination,
+                ascendingNode: ascendingNode,
+                status: 'operational',
+                id: `${type}_${index}`,
+                health: 100,
+                statusLight: statusLight,
+                originalColor: satClass.color,
+                trail: trail,
+                trailPositions: []
+            };
+            
+            satelliteGroup.castShadow = true;
+            satellites.push(satelliteGroup);
+            earthSystem.add(satelliteGroup);
+        }
+        
+        function calculateOrbitalPosition(angle, radius, inclination, ascendingNode) {
+            // Convert angles to radians
+            const incRad = (inclination * Math.PI) / 180;
+            const nodeRad = (ascendingNode * Math.PI) / 180;
+            
+            // Calculate position in orbital plane
+            const x_orbit = Math.cos(angle) * radius;
+            const y_orbit = Math.sin(angle) * radius * Math.cos(incRad);
+            const z_orbit = Math.sin(angle) * radius * Math.sin(incRad);
+            
+            // Rotate by ascending node
+            const x = x_orbit * Math.cos(nodeRad) - y_orbit * Math.sin(nodeRad);
+            const y = x_orbit * Math.sin(nodeRad) + y_orbit * Math.cos(nodeRad);
+            const z = z_orbit;
+            
+            return new THREE.Vector3(x, z, y);
+        }
+        
+        function createStars() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 2000;
+            const positions = new Float32Array(starCount * 3);
+            const sizes = new Float32Array(starCount);
+            
+            for (let i = 0; i < starCount; i++) {
+                // Random positions
+                positions[i * 3] = (Math.random() - 0.5) * 400;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 400;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 400;
+                
+                // Random sizes for variety
+                sizes[i] = Math.random() * 3 + 1;
+            }
+            
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            starGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            
+            // Create glow texture for stars
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            
+            // Create radial gradient for glow effect
+            const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 64, 64);
+            
+            const starTexture = new THREE.CanvasTexture(canvas);
+            
+            const starMaterial = new THREE.PointsMaterial({ 
+                color: 0xffffff, 
+                size: 2,
+                transparent: true,
+                opacity: 0.9,
+                map: starTexture,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true,
+                vertexColors: false
+            });
+            
+            window.starField = new THREE.Points(starGeometry, starMaterial);
+            scene.add(window.starField);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!paused) {
+                // Animate sun flames
+                if (window.sunFlames) {
+                    const time = Date.now() * 0.001;
+                    window.sunFlames.forEach((flame, index) => {
+                        const animTime = time * flame.userData.animationSpeed + flame.userData.animationOffset;
+                        const scale = 1 + Math.sin(animTime) * 0.03 + Math.cos(animTime * 1.3) * 0.02;
+                        flame.scale.setScalar(scale);
+                        
+                        // Very subtle rotation for dynamic effect
+                        flame.rotation.y += 0.003 * simulationSpeed;
+                        flame.rotation.x += 0.002 * simulationSpeed;
+                    });
+                }
+                
+                // Rotate Earth on its axis
+                earth.rotation.y += 0.005 * simulationSpeed;
+                
+                // Orbit Earth around Sun
+                earthOrbitAngle += 0.0002 * simulationSpeed;
+                earthSystem.position.x = Math.cos(earthOrbitAngle) * 50;
+                earthSystem.position.z = Math.sin(earthOrbitAngle) * 50;
+                
+                // Orbit Moon around Earth
+                moonOrbitAngle += 0.008 * simulationSpeed;
+                moon.position.x = Math.cos(moonOrbitAngle) * 3.8;
+                moon.position.z = Math.sin(moonOrbitAngle) * 3.8;
+                
+                // Animate planets
+                Object.keys(planetData).forEach(planetKey => {
+                    const data = planetData[planetKey];
+                    const planet = planets[planetKey];
+                    if (planet) {
+                        // Update orbital position
+                        planetAngles[planetKey] += data.speed * simulationSpeed;
+                        planet.position.x = Math.cos(planetAngles[planetKey]) * data.distance;
+                        planet.position.z = Math.sin(planetAngles[planetKey]) * data.distance;
+                        
+                        // Rotate planet on its axis
+                        if (planetKey === 'saturn') {
+                            // Saturn is a group, rotate the planet inside
+                            planet.children[0].rotation.y += 0.01 * simulationSpeed;
+                        } else {
+                            planet.rotation.y += 0.01 * simulationSpeed;
+                        }
+                    }
+                });
+                
+                // Update sun light to always point at Earth
+                const earthWorldPosition = new THREE.Vector3();
+                earthSystem.getWorldPosition(earthWorldPosition);
+                const sunPosition = sun.position;
+                const lightDirection = earthWorldPosition.clone().sub(sunPosition).normalize();
+                sunLight.position.copy(sunPosition);
+                sunLight.target.position.copy(earthWorldPosition);
+                sunLight.target.updateMatrixWorld();
+                
+                // Update satellites
+                satellites.forEach((satellite, index) => {
+                    if (satellite.userData.status === 'operational') {
+                        // Update orbital position
+                        satellite.userData.angle += satellite.userData.class.speed * simulationSpeed;
+                        
+                        const pos = calculateOrbitalPosition(
+                            satellite.userData.angle,
+                            satellite.userData.orbitRadius,
+                            satellite.userData.inclination,
+                            satellite.userData.ascendingNode
+                        );
+                        satellite.position.copy(pos);
+                        
+                        // Update trail
+                        updateTrail(satellite);
+                        
+                        // Random failure check (very low probability)
+                        if (Math.random() < 0.0003) {
+                            failSatellite(satellite);
+                        }
+                    } else if (satellite.userData.status === 'failed') {
+                        // Failed satellites drift slowly
+                        satellite.userData.angle += satellite.userData.class.speed * 0.1 * simulationSpeed;
+                        const pos = calculateOrbitalPosition(
+                            satellite.userData.angle,
+                            satellite.userData.orbitRadius,
+                            satellite.userData.inclination,
+                            satellite.userData.ascendingNode
+                        );
+                        satellite.position.copy(pos);
+                        
+                        // Add tumbling to failed satellites
+                        satellite.rotation.x += 0.02;
+                        satellite.rotation.z += 0.01;
+                        
+                        // Update trail for failed satellites too
+                        updateTrail(satellite);
+                    }
+                });
+                
+                // Handle Follow Earth mode
+                if (followEarth) {
+                    const currentEarthPosition = earthSystem.position.clone();
+                    const earthMovement = currentEarthPosition.clone().sub(lastEarthPosition);
+                    
+                    // Move camera by the same amount Earth moved
+                    camera.position.add(earthMovement);
+                    
+                    // Update last Earth position
+                    lastEarthPosition.copy(currentEarthPosition);
+                }
+                
+                // Handle camera modes
+                if (!freeMode) {
+                    // Update camera based on current preset (only if not following Earth)
+                    if (!followEarth) {
+                        const preset = cameraPresets[currentCameraPreset];
+                        if (preset) {
+                            const newPos = preset.getPosition();
+                            const newTarget = preset.getTarget();
+                            
+                            // For moon view and satellite view, update more frequently
+                            if (currentCameraPreset === 3 || currentCameraPreset === 7) { // Moon or Random Satellite
+                                camera.position.copy(newPos);
+                                camera.lookAt(newTarget);
+                } else {
+                                // Smooth transition to preset position
+                                camera.position.lerp(newPos, 0.02);
+                                camera.lookAt(newTarget);
+                            }
+                        }
+                    } else {
+                        // In follow Earth mode, look at Earth
+                        camera.lookAt(earthSystem.position);
+                    }
+                } else {
+                    // Free mode - manual camera controls
+                    updateCameraControls();
+                    
+                    // Even in free mode, if following Earth, look at Earth after manual movement
+                    if (followEarth) {
+                        camera.lookAt(earthSystem.position);
+                }
+                }
+                
+                updateCameraInfo();
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function updateTrail(satellite) {
+            if (!showTrails) {
+                if (satellite.userData.trail) {
+                    satellite.userData.trail.visible = false;
+                }
+                return;
+            }
+            
+            const trail = satellite.userData.trail;
+            if (!trail) return;
+            
+            trail.visible = true;
+            
+            // Initialize trail positions array if needed
+            if (!satellite.userData.trailPositions) {
+                satellite.userData.trailPositions = [];
+            }
+            
+            const positions = satellite.userData.trailPositions;
+            
+            // Get world position of satellite
+            const worldPos = new THREE.Vector3();
+            satellite.getWorldPosition(worldPos);
+            
+            // Add current position to trail
+            positions.push(worldPos.x, worldPos.y, worldPos.z);
+            
+            // Limit trail length
+            if (positions.length > maxTrailLength * 3) {
+                positions.splice(0, 3);
+            }
+            
+            // Update trail geometry
+            if (positions.length >= 6) { // Need at least 2 points for a line
+            const trailPositions = new Float32Array(positions);
+            trail.geometry.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+            trail.geometry.attributes.position.needsUpdate = true;
+                trail.geometry.setDrawRange(0, positions.length / 3);
+            }
+        }
+        
+        function updateCameraControls() {
+            const moveSpeed = cameraControls.fast ? 0.5 : 0.2;
+            
+            // Movement
+            if (cameraControls.forward) {
+                const forward = new THREE.Vector3(0, 0, -1);
+                forward.applyQuaternion(camera.quaternion);
+                camera.position.add(forward.multiplyScalar(moveSpeed));
+            }
+            if (cameraControls.backward) {
+                const backward = new THREE.Vector3(0, 0, 1);
+                backward.applyQuaternion(camera.quaternion);
+                camera.position.add(backward.multiplyScalar(moveSpeed));
+            }
+            if (cameraControls.left) {
+                const left = new THREE.Vector3(-1, 0, 0);
+                left.applyQuaternion(camera.quaternion);
+                camera.position.add(left.multiplyScalar(moveSpeed));
+            }
+            if (cameraControls.right) {
+                const right = new THREE.Vector3(1, 0, 0);
+                right.applyQuaternion(camera.quaternion);
+                camera.position.add(right.multiplyScalar(moveSpeed));
+            }
+            if (cameraControls.up) {
+                camera.position.y += moveSpeed;
+            }
+            if (cameraControls.down) {
+                camera.position.y -= moveSpeed;
+            }
+            
+            // Update camera info
+            const distance = camera.position.length();
+            document.getElementById('camera-info').textContent = 
+                `Camera: Manual (${distance.toFixed(1)}km)`;
+        }
+        
+        function failSatellite(satellite) {
+            satellite.userData.status = 'failed';
+            satellite.userData.health = 0;
+            
+            // Change status light to red and trail color
+            satellite.userData.statusLight.material.color.setHex(0xff3333);
+            satellite.userData.trail.material.color.setHex(0xff3333);
+            
+            updateSatelliteCount();
+            console.log(`Satellite ${satellite.userData.id} has failed!`);
+        }
+        
+        function updateSatelliteCount() {
+            const operational = satellites.filter(s => s.userData.status === 'operational').length;
+            const failed = satellites.filter(s => s.userData.status === 'failed').length;
+            
+            document.getElementById('satellite-count').textContent = `Active Satellites: ${operational}`;
+            document.getElementById('failed-count').textContent = `Failed Satellites: ${failed}`;
+        }
+        
+        // Event handlers
+        function onMouseClick(event) {
+            if (autoCamera) return;
+            
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(satellites, true);
+            
+            if (intersects.length > 0) {
+                const satellite = intersects[0].object.parent;
+                selectedSatellite = satellite;
+                showSatelliteInfo(satellite);
+            }
+        }
+        
+        function onMouseDown(event) {
+            if (autoCamera) return;
+            mousePressed = true;
+        }
+        
+        function onMouseUp(event) {
+            mousePressed = false;
+        }
+        
+        function onMouseMove(event) {
+            if (autoCamera || !mousePressed) return;
+            
+            const deltaX = event.movementX || 0;
+            const deltaY = event.movementY || 0;
+            
+            cameraRotation.y -= deltaX * 0.005;
+            cameraRotation.x -= deltaY * 0.005;
+            
+            // Limit vertical rotation
+            cameraRotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, cameraRotation.x));
+            
+            // Apply rotation
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = cameraRotation.y;
+            camera.rotation.x = cameraRotation.x;
+        }
+        
+        function onKeyDown(event) {
+            switch(event.code) {
+                case 'KeyW': cameraControls.forward = true; break;
+                case 'KeyS': cameraControls.backward = true; break;
+                case 'KeyA': cameraControls.left = true; break;
+                case 'KeyD': cameraControls.right = true; break;
+                case 'KeyQ': cameraControls.up = true; break;
+                case 'KeyE': cameraControls.down = true; break;
+                case 'ShiftLeft': case 'ShiftRight': cameraControls.fast = true; break;
+                case 'Space': 
+                    event.preventDefault();
+                    resetCameraView();
+                    break;
+            }
+        }
+        
+        function onKeyUp(event) {
+            switch(event.code) {
+                case 'KeyW': cameraControls.forward = false; break;
+                case 'KeyS': cameraControls.backward = false; break;
+                case 'KeyA': cameraControls.left = false; break;
+                case 'KeyD': cameraControls.right = false; break;
+                case 'KeyQ': cameraControls.up = false; break;
+                case 'KeyE': cameraControls.down = false; break;
+                case 'ShiftLeft': case 'ShiftRight': cameraControls.fast = false; break;
+            }
+        }
+        
+        function resetCameraView() {
+            setCameraPreset(0); // Reset to Sun view
+        }
+        
+        // Touch event handlers
+        function onTouchStart(event) {
+            event.preventDefault();
+            
+            touchCount = event.touches.length;
+            
+            if (touchCount === 1) {
+                // Single touch - look around
+                const touch = event.touches[0];
+                touchStart.x = touch.clientX;
+                touchStart.y = touch.clientY;
+                isTouching = true;
+            } else if (touchCount === 2) {
+                // Two finger pinch - zoom
+                const touch1 = event.touches[0];
+                const touch2 = event.touches[1];
+                initialPinchDistance = Math.sqrt(
+                    Math.pow(touch2.clientX - touch1.clientX, 2) +
+                    Math.pow(touch2.clientY - touch1.clientY, 2)
+                );
+            }
+        }
+        
+        function onTouchMove(event) {
+            event.preventDefault();
+            
+            if (autoCamera) return;
+            
+            if (touchCount === 1 && isTouching) {
+                // Single touch - rotate camera
+                const touch = event.touches[0];
+                const deltaX = touch.clientX - touchStart.x;
+                const deltaY = touch.clientY - touchStart.y;
+                
+                cameraRotation.y -= deltaX * 0.01;
+                cameraRotation.x -= deltaY * 0.01;
+                
+                // Limit vertical rotation
+                cameraRotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, cameraRotation.x));
+                
+                // Apply rotation
+                camera.rotation.order = 'YXZ';
+                camera.rotation.y = cameraRotation.y;
+                camera.rotation.x = cameraRotation.x;
+                
+                touchStart.x = touch.clientX;
+                touchStart.y = touch.clientY;
+            } else if (touchCount === 2) {
+                // Two finger pinch - zoom
+                const touch1 = event.touches[0];
+                const touch2 = event.touches[1];
+                currentPinchDistance = Math.sqrt(
+                    Math.pow(touch2.clientX - touch1.clientX, 2) +
+                    Math.pow(touch2.clientY - touch1.clientY, 2)
+                );
+                
+                const zoomDelta = (currentPinchDistance - initialPinchDistance) * 0.01;
+                const zoomDirection = new THREE.Vector3(0, 0, -1);
+                zoomDirection.applyQuaternion(camera.quaternion);
+                camera.position.add(zoomDirection.multiplyScalar(zoomDelta));
+                
+                initialPinchDistance = currentPinchDistance;
+            }
+        }
+        
+        function onTouchEnd(event) {
+            event.preventDefault();
+            
+            touchCount = event.touches.length;
+            
+            if (touchCount === 0) {
+                isTouching = false;
+                
+                // Check for tap to select satellite
+                if (!autoCamera && event.changedTouches.length === 1) {
+                    const touch = event.changedTouches[0];
+                    const timeDiff = Date.now() - (touchStart.time || 0);
+                    const moveDiff = Math.abs(touch.clientX - touchStart.x) + Math.abs(touch.clientY - touchStart.y);
+                    
+                    // If it was a quick tap with minimal movement
+                    if (timeDiff < 300 && moveDiff < 10) {
+                        mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+                        mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+                        
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObjects(satellites, true);
+                        
+                        if (intersects.length > 0) {
+                            const satellite = intersects[0].object.parent;
+                            selectedSatellite = satellite;
+                            showSatelliteInfo(satellite);
+                        }
+                    }
+                }
+            }
+            
+            touchStart.time = Date.now();
+        }
+        
+        function showSatelliteInfo(satellite) {
+            const info = document.getElementById('selected-info');
+            const data = satellite.userData;
+            const statusClass = data.status === 'failed' ? 'status-fail' : 
+                               data.type.includes('COMM') ? 'status-comm' :
+                               data.type.includes('NAV') ? 'status-nav' :
+                               data.type.includes('WEATHER') ? 'status-weather' :
+                               data.type.includes('MILITARY') ? 'status-military' : '';
+            
+            info.innerHTML = `
+                <strong>SATELLITE INFO</strong><br>
+                ID: ${data.id}<br>
+                Type: <span class="${statusClass}">${data.class.name}</span><br>
+                Altitude: ${(data.orbitRadius * 6371).toFixed(0)} km<br>
+                Inclination: ${data.inclination.toFixed(1)}°<br>
+                Status: <span class="${statusClass}">${data.status.toUpperCase()}</span><br>
+                Health: ${data.health}%<br>
+                Speed: ${(data.class.speed * 100).toFixed(2)}°/frame
+            `;
+        }
+        
+        // Control functions
+        function togglePause() {
+            paused = !paused;
+            const btn = event.target;
+            btn.textContent = paused ? '▶️ RESUME' : '⏸️ PAUSE';
+        }
+        
+        function resetSimulation() {
+            // Reset all simulation variables
+            paused = false;
+            showOrbits = true;
+            showTrails = false;
+            freeMode = false;
+            followEarth = false;
+            negativeLighting = false;
+            simulationSpeed = 1.0;
+            earthOrbitAngle = 0;
+            moonOrbitAngle = 0;
+            highlightedSatellites = [];
+            currentCameraPreset = 0;
+            
+            // Reset Earth and Moon positions
+            earthSystem.position.set(50, 0, 0);
+            moon.position.set(3.8, 0, 0);
+            earth.rotation.y = 0;
+            
+            // Reset planet positions and angles
+            Object.keys(planetData).forEach(planetKey => {
+                const data = planetData[planetKey];
+                const planet = planets[planetKey];
+                if (planet) {
+                    planetAngles[planetKey] = Math.random() * Math.PI * 2;
+                    planet.position.x = Math.cos(planetAngles[planetKey]) * data.distance;
+                    planet.position.z = Math.sin(planetAngles[planetKey]) * data.distance;
+                    
+                    if (planetKey === 'saturn') {
+                        planet.children[0].rotation.y = 0;
+                    } else {
+                        planet.rotation.y = 0;
+                    }
+                }
+            });
+            
+            // Reset lighting to normal
+            scene.background = new THREE.Color(0x000011);
+            sunLight.color.setHex(0xffffff);
+            
+            // Restore sun colors
+            sun.children.forEach((child, index) => {
+                if (child.material && child.material.color) {
+                    if (index === 0) { // Core
+                        child.material.color.setHex(0xffff00);
+                    } else { // Glow
+                        child.material.color.setHex(0xffaa00);
+                    }
+                }
+            });
+            
+            if (window.sunFlames) {
+                const colors = [0xff4400, 0xff6600, 0xff8800, 0xffaa00, 0xffcc00];
+                window.sunFlames.forEach((flame, index) => {
+                    flame.material.color.setHex(colors[index] || 0xffaa00);
+                    flame.scale.setScalar(1);
+                    flame.rotation.set(0, 0, 0);
+                });
+            }
+            
+            // Restore stars
+            if (window.starField) {
+                window.starField.material.color.setHex(0xffffff);
+                window.starField.material.blending = THREE.AdditiveBlending;
+            }
+            
+            // Restore planet colors
+            Object.keys(planetData).forEach(planetKey => {
+                const planet = planets[planetKey];
+                const data = planetData[planetKey];
+                if (planet && data) {
+                    if (planetKey === 'saturn') {
+                        planet.children[0].material.color.setHex(data.color);
+                        planet.children[1].material.color.setHex(0xffddaa);
+                    } else {
+                        planet.material.color.setHex(data.color);
+                    }
+                }
+            });
+            
+            // Reset UI controls to default values
+            document.getElementById('simulation-speed').value = 1;
+            document.getElementById('speed-display').textContent = '1.0x';
+            
+            // Recreate satellites with default configuration
+            createSatellites();
+            
+            // Reset camera to default Sun view
+            setCameraPreset(0);
+            lastEarthPosition.copy(earthSystem.position);
+            
+            // Update all UI elements
+            updatePresetButtons();
+            updateFreeModeButton();
+            updateFollowEarthButton();
+            updateNegativeButton();
+            
+            // Update toggle buttons
+            const orbitsBtn = document.querySelector('button[onclick="toggleOrbits()"]');
+            if (orbitsBtn) orbitsBtn.textContent = showOrbits ? '🌍 ORBITS ✓' : '🌍 ORBITS';
+            
+            const trailsBtn = document.querySelector('button[onclick="toggleTrails()"]');
+            if (trailsBtn) trailsBtn.textContent = showTrails ? '✨ TRAILS ✓' : '✨ TRAILS';
+            
+            const pauseBtn = document.querySelector('button[onclick="togglePause()"]');
+            if (pauseBtn) pauseBtn.textContent = '⏸️ PAUSE';
+            
+            // Clear selection info
+            document.getElementById('selected-info').textContent = 'Click satellite for details';
+            
+            console.log('Simulation completely reset to initial state');
+        }
+        
+        function randomFailure() {
+            const operational = satellites.filter(s => s.userData.status === 'operational');
+            if (operational.length > 0) {
+                const randomSat = operational[Math.floor(Math.random() * operational.length)];
+                failSatellite(randomSat);
+            }
+        }
+        
+        function toggleOrbits() {
+            showOrbits = !showOrbits;
+            orbitalRings.forEach(ring => {
+                ring.visible = showOrbits;
+            });
+            
+            // Update button text
+            const btn = document.querySelector('button[onclick="toggleOrbits()"]');
+            if (btn) {
+                btn.textContent = showOrbits ? '🌍 ORBITS ✓' : '🌍 ORBITS';
+            }
+        }
+        
+        function toggleTrails() {
+            showTrails = !showTrails;
+            trails.forEach(trail => {
+                trail.visible = showTrails;
+            });
+            
+            // Update button text
+            const btn = document.querySelector('button[onclick="toggleTrails()"]');
+            if (btn) {
+                btn.textContent = showTrails ? '✨ TRAILS ✓' : '✨ TRAILS';
+            }
+        }
+        
+        function applySatelliteConfig() {
+            createOrbitalRings();
+            createSatellites();
+        }
+        
+        function updateSimulationSpeed() {
+            simulationSpeed = parseFloat(document.getElementById('simulation-speed').value);
+            document.getElementById('speed-display').textContent = simulationSpeed.toFixed(1) + 'x';
+        }
+        
+        function setCameraPreset(presetIndex) {
+            if (presetIndex < 0 || presetIndex >= cameraPresets.length) return;
+            
+            currentCameraPreset = presetIndex;
+            freeMode = false;
+            
+            const preset = cameraPresets[presetIndex];
+            const newPos = preset.getPosition();
+            const newTarget = preset.getTarget();
+            
+            camera.position.copy(newPos);
+            camera.lookAt(newTarget);
+            cameraRotation = { x: 0, y: 0 };
+            
+            updateCameraInfo();
+            updatePresetButtons();
+        }
+        
+        function toggleFreeMode() {
+            freeMode = !freeMode;
+            
+            if (freeMode) {
+                // Enable manual controls from current position
+                cameraRotation = { x: 0, y: 0 };
+            }
+            
+            updateCameraInfo();
+            updateFreeModeButton();
+        }
+        
+        function toggleFollowEarth() {
+            followEarth = !followEarth;
+            
+            if (followEarth) {
+                // When starting to follow Earth, record current Earth position
+                lastEarthPosition.copy(earthSystem.position);
+                
+                // Calculate offset from camera to Earth for reference
+                earthFollowOffset.copy(camera.position).sub(earthSystem.position);
+            }
+            
+            updateCameraInfo();
+            updateFollowEarthButton();
+        }
+        
+        function updateCameraInfo() {
+            const preset = cameraPresets[currentCameraPreset];
+            let modeText;
+            
+            if (freeMode && followEarth) {
+                modeText = 'Free + Follow Earth';
+            } else if (freeMode) {
+                modeText = 'Free Mode';
+            } else if (followEarth) {
+                modeText = `${preset.name} + Follow`;
+            } else {
+                modeText = preset.name;
+            }
+            
+            let followText = followEarth ? 'On' : 'Off';
+            
+            document.getElementById('camera-info').textContent = `Camera: ${modeText}`;
+            document.getElementById('camera-mode').textContent = `Mode: ${freeMode ? 'Free' : 'Preset'} | Follow: ${followText}`;
+        }
+        
+        function updatePresetButtons() {
+            for (let i = 0; i < cameraPresets.length; i++) {
+                const btn = document.getElementById(`preset-${i}`);
+                if (btn) {
+                    btn.classList.toggle('active', i === currentCameraPreset && !freeMode);
+                }
+            }
+        }
+        
+        function updateFreeModeButton() {
+            const btn = document.getElementById('free-mode-btn');
+            if (btn) {
+                btn.classList.toggle('active', freeMode);
+                btn.textContent = freeMode ? '🎮 FREE MODE ✓' : '🎮 FREE MODE';
+            }
+        }
+        
+        function updateFollowEarthButton() {
+            const btn = document.getElementById('follow-earth-btn');
+            if (btn) {
+                btn.classList.toggle('active', followEarth);
+                btn.textContent = followEarth ? '🌍 FOLLOW EARTH ✓' : '🌍 FOLLOW EARTH';
+            }
+        }
+        
+        function toggleUI() {
+            uiVisible = !uiVisible;
+            const panels = document.querySelectorAll('.ui-panel');
+            
+            panels.forEach(panel => {
+                panel.classList.toggle('hidden', !uiVisible);
+            });
+            
+            const toggle = document.getElementById('ui-toggle');
+            toggle.textContent = uiVisible ? '📋' : '👁️';
+        }
+        
+        function toggleNegativeLighting() {
+            negativeLighting = !negativeLighting;
+            
+            if (negativeLighting) {
+                // Invert colors for negative effect
+                scene.background = new THREE.Color(0xffffff);
+                
+                // Make sun dark - iterate through all children
+                sun.children.forEach(child => {
+                    if (child.material) {
+                        if (child.material.color) {
+                            child.material.color.setHex(0x000055);
+                        }
+                    }
+                });
+                
+                // Dark sun flames
+                if (window.sunFlames) {
+                    window.sunFlames.forEach(flame => {
+                        flame.material.color.setHex(0x000044);
+                    });
+                }
+                
+                // Invert lighting
+                sunLight.color.setHex(0x000000);
+                
+                // Dark stars
+                if (window.starField) {
+                    window.starField.material.color.setHex(0x000000);
+                    window.starField.material.blending = THREE.SubtractiveBlending;
+                }
+                
+                // Invert planet colors
+                Object.keys(planets).forEach(planetKey => {
+                    const planet = planets[planetKey];
+                    if (planet) {
+                        if (planetKey === 'saturn') {
+                            planet.children[0].material.color.setHex(0x111111);
+                            planet.children[1].material.color.setHex(0x222222);
+                        } else {
+                            planet.material.color.setHex(0x111111);
+                        }
+                    }
+                });
+                
+            } else {
+                // Restore normal colors
+                scene.background = new THREE.Color(0x000011);
+                
+                // Restore sun core
+                sun.children.forEach((child, index) => {
+                    if (child.material && child.material.color) {
+                        if (index === 0) { // Core
+                            child.material.color.setHex(0xffff00);
+                        } else { // Glow
+                            child.material.color.setHex(0xffaa00);
+                        }
+                    }
+                });
+                
+                // Restore sun flames
+                if (window.sunFlames) {
+                    const colors = [0xff4400, 0xff6600, 0xff8800, 0xffaa00, 0xffcc00];
+                    window.sunFlames.forEach((flame, index) => {
+                        flame.material.color.setHex(colors[index] || 0xffaa00);
+                    });
+                }
+                
+                // Restore lighting
+                sunLight.color.setHex(0xffffff);
+                
+                // Restore stars
+                if (window.starField) {
+                    window.starField.material.color.setHex(0xffffff);
+                    window.starField.material.blending = THREE.AdditiveBlending;
+                }
+                
+                // Restore planet colors
+                Object.keys(planetData).forEach(planetKey => {
+                    const planet = planets[planetKey];
+                    const data = planetData[planetKey];
+                    if (planet && data) {
+                        if (planetKey === 'saturn') {
+                            planet.children[0].material.color.setHex(data.color);
+                            planet.children[1].material.color.setHex(0xffddaa);
+                        } else {
+                            planet.material.color.setHex(data.color);
+                        }
+                    }
+                });
+            }
+            
+            updateNegativeButton();
+        }
+        
+        function updateNegativeButton() {
+            const btn = document.getElementById('negative-btn');
+            if (btn) {
+                btn.classList.toggle('active', negativeLighting);
+                btn.textContent = negativeLighting ? '🌑 NEGATIVE ✓' : '🌑 NEGATIVE';
+            }
+        }
+        
+        function highlightSatelliteClass(satelliteType) {
+            // First unhighlight all satellites
+            unhighlightAllSatellites();
+            
+            // Find and highlight satellites of the specified type
+            satellites.forEach(satellite => {
+                if (satellite.userData.type === satelliteType) {
+                    highlightSatellite(satellite);
+                    highlightedSatellites.push(satellite);
+                }
+            });
+        }
+        
+        function highlightSatellite(satellite) {
+            // Scale up the satellite
+            satellite.scale.set(2.5, 2.5, 2.5);
+            
+            // Make the status light brighter and larger
+            const statusLight = satellite.userData.statusLight;
+            if (statusLight) {
+                statusLight.scale.set(3, 3, 3);
+                statusLight.material.opacity = 1.0;
+            }
+            
+            // Make the trail more prominent
+            const trail = satellite.userData.trail;
+            if (trail && showTrails) {
+                trail.material.opacity = 1.0;
+                trail.material.linewidth = 3;
+            }
+        }
+        
+        function unhighlightAllSatellites() {
+            highlightedSatellites.forEach(satellite => {
+                // Reset scale
+                satellite.scale.set(1, 1, 1);
+                
+                // Reset status light
+                const statusLight = satellite.userData.statusLight;
+                if (statusLight) {
+                    statusLight.scale.set(1, 1, 1);
+                    statusLight.material.opacity = 0.8;
+                }
+                
+                // Reset trail
+                const trail = satellite.userData.trail;
+                if (trail) {
+                    trail.material.opacity = 0.6;
+                    trail.material.linewidth = 1;
+                }
+            });
+            
+            // Clear the highlighted satellites array
+            highlightedSatellites = [];
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Helper function to update UI elements (referenced by API)
+        function updateUI() {
+            const pauseBtn = document.querySelector('button[onclick="togglePause()"]');
+            if (pauseBtn) {
+                pauseBtn.textContent = paused ? '▶️ RESUME' : '⏸️ PAUSE';
+            }
+        }
+        
+        // Initialize the simulation when page loads
+        window.addEventListener('load', function() {
+            init();
+            
+            // Initialize slider value displays and event listeners
+            const sliders = [
+                { id: 'leo-comm', valueId: 'leo-comm-value' },
+                { id: 'weather', valueId: 'weather-value' },
+                { id: 'nav', valueId: 'nav-value' },
+                { id: 'geo-comm', valueId: 'geo-comm-value' },
+                { id: 'military', valueId: 'military-value' }
+            ];
+            
+            sliders.forEach(slider => {
+                const sliderElement = document.getElementById(slider.id);
+                const valueElement = document.getElementById(slider.valueId);
+                
+                if (sliderElement && valueElement) {
+                    // Set initial value
+                    valueElement.textContent = sliderElement.value;
+                    
+                    // Add event listener to update value display
+                    sliderElement.addEventListener('input', function() {
+                        valueElement.textContent = this.value;
+                    });
+                }
+            });
+        });
+    </script>
+    
+    <!-- Satellite Solar Simulation API -->
+    <script src="sat-sol-sim.js"></script>
+</body>
+</html>

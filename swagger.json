@@ -1,0 +1,584 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Solar System API",
+    "description": "Comprehensive JavaScript API for controlling the 3D Solar System Satellite Simulation",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Solar System Simulation Team",
+      "email": "support@solarsystem-api.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/simulation/start": {
+      "post": {
+        "summary": "Start Simulation",
+        "description": "Starts or resumes the simulation",
+        "tags": ["Simulation"],
+        "responses": {
+          "200": {
+            "description": "Simulation started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/simulation/pause": {
+      "post": {
+        "summary": "Pause Simulation",
+        "description": "Pauses the simulation",
+        "tags": ["Simulation"],
+        "responses": {
+          "200": {
+            "description": "Simulation paused successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/simulation/speed": {
+      "post": {
+        "summary": "Set Simulation Speed",
+        "description": "Sets the simulation speed multiplier",
+        "tags": ["Simulation"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "speed": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 3.0,
+                    "description": "Speed multiplier"
+                  }
+                },
+                "required": ["speed"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Speed updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Simulation Speed",
+        "description": "Gets the current simulation speed",
+        "tags": ["Simulation"],
+        "responses": {
+          "200": {
+            "description": "Current simulation speed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "speed": {
+                      "type": "number",
+                      "description": "Current speed multiplier"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/simulation/state": {
+      "get": {
+        "summary": "Get Simulation State",
+        "description": "Gets comprehensive simulation state information",
+        "tags": ["Simulation"],
+        "responses": {
+          "200": {
+            "description": "Current simulation state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimulationState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/camera/preset": {
+      "post": {
+        "summary": "Set Camera Preset",
+        "description": "Sets camera to a specific preset",
+        "tags": ["Camera"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "presetIndex": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7,
+                    "description": "Preset index (0-7)"
+                  }
+                },
+                "required": ["presetIndex"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Camera preset set successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/camera/presets": {
+      "get": {
+        "summary": "Get Camera Presets",
+        "description": "Gets all available camera presets",
+        "tags": ["Camera"],
+        "responses": {
+          "200": {
+            "description": "List of camera presets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CameraPreset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/camera/position": {
+      "post": {
+        "summary": "Set Camera Position",
+        "description": "Sets camera position directly",
+        "tags": ["Camera"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Position3D"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Camera position set successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Camera Position",
+        "description": "Gets current camera position",
+        "tags": ["Camera"],
+        "responses": {
+          "200": {
+            "description": "Current camera position",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Position3D"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/satellites": {
+      "get": {
+        "summary": "Get All Satellites",
+        "description": "Gets information about all satellites",
+        "tags": ["Satellites"],
+        "responses": {
+          "200": {
+            "description": "List of all satellites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Satellite"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/satellites/configuration": {
+      "post": {
+        "summary": "Set Satellite Configuration",
+        "description": "Sets satellite constellation configuration",
+        "tags": ["Satellites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SatelliteConfiguration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuration updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Satellite Configuration",
+        "description": "Gets current satellite configuration",
+        "tags": ["Satellites"],
+        "responses": {
+          "200": {
+            "description": "Current satellite configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SatelliteConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/satellites/highlight": {
+      "post": {
+        "summary": "Highlight Satellites",
+        "description": "Highlights satellites of specific type",
+        "tags": ["Satellites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["LEO_COMM", "LEO_WEATHER", "MEO_NAV", "GEO_COMM", "MILITARY"],
+                    "description": "Satellite type to highlight"
+                  }
+                },
+                "required": ["type"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Satellites highlighted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/visuals/orbits": {
+      "post": {
+        "summary": "Toggle Orbits",
+        "description": "Shows or hides orbital rings",
+        "tags": ["Visuals"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "show": {
+                    "type": "boolean",
+                    "description": "Whether to show orbits"
+                  }
+                },
+                "required": ["show"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Orbits visibility updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/utils/screenshot": {
+      "get": {
+        "summary": "Take Screenshot",
+        "description": "Takes screenshot of current simulation",
+        "tags": ["Utils"],
+        "responses": {
+          "200": {
+            "description": "Screenshot taken successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "imageData": {
+                      "type": "string",
+                      "description": "Base64 encoded PNG image data URL"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message"
+          }
+        },
+        "required": ["success"]
+      },
+      "SimulationState": {
+        "type": "object",
+        "properties": {
+          "paused": {
+            "type": "boolean",
+            "description": "Whether simulation is paused"
+          },
+          "speed": {
+            "type": "number",
+            "description": "Current speed multiplier"
+          },
+          "earthOrbitAngle": {
+            "type": "number",
+            "description": "Earth's current orbital angle"
+          },
+          "moonOrbitAngle": {
+            "type": "number",
+            "description": "Moon's current orbital angle"
+          },
+          "showOrbits": {
+            "type": "boolean",
+            "description": "Whether orbital rings are visible"
+          },
+          "showTrails": {
+            "type": "boolean",
+            "description": "Whether satellite trails are visible"
+          },
+          "negativeLighting": {
+            "type": "boolean",
+            "description": "Whether negative lighting mode is enabled"
+          }
+        }
+      },
+      "Position3D": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "description": "X coordinate"
+          },
+          "y": {
+            "type": "number",
+            "description": "Y coordinate"
+          },
+          "z": {
+            "type": "number",
+            "description": "Z coordinate"
+          }
+        },
+        "required": ["x", "y", "z"]
+      },
+      "CameraPreset": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "description": "Preset index"
+          },
+          "name": {
+            "type": "string",
+            "description": "Preset name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Preset description"
+          }
+        }
+      },
+      "Satellite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique satellite identifier"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["LEO_COMM", "LEO_WEATHER", "MEO_NAV", "GEO_COMM", "MILITARY"],
+            "description": "Satellite type"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["operational", "failed", "maintenance"],
+            "description": "Satellite operational status"
+          },
+          "health": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Satellite health percentage"
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position3D"
+          },
+          "class": {
+            "type": "string",
+            "description": "Satellite class identifier"
+          }
+        }
+      },
+      "SatelliteConfiguration": {
+        "type": "object",
+        "properties": {
+          "LEO_COMM": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of LEO communication satellites"
+          },
+          "LEO_WEATHER": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of weather satellites"
+          },
+          "MEO_NAV": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of navigation satellites"
+          },
+          "GEO_COMM": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of geostationary communication satellites"
+          },
+          "MILITARY": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of military satellites"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Simulation",
+      "description": "Simulation control operations"
+    },
+    {
+      "name": "Camera",
+      "description": "Camera positioning and control"
+    },
+    {
+      "name": "Satellites",
+      "description": "Satellite management operations"
+    },
+    {
+      "name": "Visuals",
+      "description": "Visual effects and display options"
+    },
+    {
+      "name": "Utils",
+      "description": "Utility functions"
+    }
+  ]
+} 

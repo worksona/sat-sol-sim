@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System API - Interactive Playground</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #001122;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        .playground-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+        
+        .simulation-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .simulation-frame {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            flex: 1;
+        }
+        
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #004400;
+            border-radius: 6px;
+            background: rgba(0, 20, 0, 0.3);
+        }
+        
+        .section h3 {
+            color: #00ff88;
+            margin-top: 0;
+            border-bottom: 1px solid #004400;
+            padding-bottom: 8px;
+        }
+        
+        .code-editor {
+            background: #000011;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            min-height: 100px;
+            resize: vertical;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .code-editor:focus {
+            outline: none;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        
+        button {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #004400;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        
+        button.primary {
+            background: #006600;
+            font-weight: bold;
+        }
+        
+        button.primary:hover {
+            background: #008800;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .output {
+            background: #000011;
+            border: 1px solid #666666;
+            color: #cccccc;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .examples {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .example-item {
+            background: rgba(0, 30, 0, 0.5);
+            border: 1px solid #004400;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .example-item:hover {
+            background: rgba(0, 50, 0, 0.7);
+            border-color: #006600;
+        }
+        
+        .example-item h4 {
+            margin: 0 0 5px 0;
+            color: #00ff88;
+            font-size: 12px;
+        }
+        
+        .example-item code {
+            font-size: 10px;
+            color: #aaaaaa;
+            display: block;
+            white-space: pre-wrap;
+        }
+        
+        .status-bar {
+            background: #000033;
+            border: 1px solid #004400;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        
+        .api-status {
+            color: #00ff88;
+        }
+        
+        .error {
+            color: #ff6666;
+        }
+        
+        .success {
+            color: #66ff66;
+        }
+        
+        .warning {
+            color: #ffaa00;
+        }
+        
+        @media (max-width: 1200px) {
+            .playground-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .control-panel {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Solar System API Playground</h1>
+        
+        <div class="playground-layout">
+            <div class="simulation-panel">
+                <iframe src="../satellite_simulation.html" class="simulation-frame" id="simulation"></iframe>
+            </div>
+            
+            <div class="control-panel">
+                <div class="status-bar">
+                    <div class="api-status" id="api-status">⏳ Connecting to API...</div>
+                </div>
+                
+                <div class="section">
+                    <h3>💻 Code Editor</h3>
+                    <textarea class="code-editor" id="code-input" placeholder="// Enter your JavaScript code here
+// Example: SolarSystemAPI.camera.setPreset(2);
+
+"></textarea>
+                    <button class="primary" onclick="executeCode()">▶️ Execute Code</button>
+                    <button onclick="clearEditor()">🗑️ Clear</button>
+                </div>
+                
+                <div class="section">
+                    <h3>⚡ Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button onclick="quickAction('start')">▶️ Start</button>
+                        <button onclick="quickAction('pause')">⏸️ Pause</button>
+                        <button onclick="quickAction('reset')">🔄 Reset</button>
+                        <button onclick="quickAction('fast')">🚀 Speed Up</button>
+                        <button onclick="quickAction('earth')">🌍 Earth View</button>
+                        <button onclick="quickAction('moon')">🌙 Moon View</button>
+                        <button onclick="quickAction('trails')">✨ Toggle Trails</button>
+                        <button onclick="quickAction('negative')">🌑 Negative</button>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>📝 Output Console</h3>
+                    <div class="output" id="output">Ready to execute code...</div>
+                    <button onclick="clearOutput()">🗑️ Clear Output</button>
+                </div>
+                
+                <div class="section">
+                    <h3>📚 Code Examples</h3>
+                    <div class="examples" id="examples">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiReady = false;
+        let iframeWindow = null;
+        let SolarSystemAPI = null;
+        
+        // Wait for iframe to load and get API reference
+        document.getElementById('simulation').addEventListener('load', function() {
+            iframeWindow = document.getElementById('simulation').contentWindow;
+            
+            // Check if API is available
+            function checkAPI() {
+                if (iframeWindow.SolarSystemAPI) {
+                    SolarSystemAPI = iframeWindow.SolarSystemAPI;
+                    apiReady = true;
+                    
+                    document.getElementById('api-status').innerHTML = 
+                        '✅ <span class="success">API Connected</span> - Ready to code!';
+                    
+                    populateExamples();
+                    
+                    console.log('🚀 API Playground Ready!');
+                } else {
+                    // Keep checking until API is available
+                    setTimeout(checkAPI, 100);
+                }
+            }
+            
+            checkAPI();
+        });
+        
+        // Code execution
+        function executeCode() {
+            if (!apiReady) {
+                outputLog('❌ API not ready yet', 'error');
+                return;
+            }
+            
+            const code = document.getElementById('code-input').value.trim();
+            if (!code) {
+                outputLog('❌ No code to execute', 'warning');
+                return;
+            }
+            
+            outputLog(`🔨 Executing: ${code}`, 'info');
+            
+            try {
+                // Execute code in iframe context with SolarSystemAPI available
+                const result = iframeWindow.eval(`
+                    try {
+                        ${code}
+                    } catch (e) {
+                        throw e;
+                    }
+                `);
+                
+                if (result !== undefined) {
+                    outputLog(`✅ Result: ${JSON.stringify(result)}`, 'success');
+                } else {
+                    outputLog('✅ Code executed successfully', 'success');
+                }
+            } catch (error) {
+                outputLog(`❌ Error: ${error.message}`, 'error');
+                console.error('Code execution error:', error);
+            }
+        }
+        
+        function clearEditor() {
+            document.getElementById('code-input').value = '';
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').innerHTML = 'Console cleared...';
+        }
+        
+        function outputLog(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            
+            output.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Quick actions
+        function quickAction(action) {
+            if (!apiReady) return;
+            
+            switch (action) {
+                case 'start':
+                    SolarSystemAPI.simulation.start();
+                    outputLog('▶️ Simulation started', 'success');
+                    break;
+                case 'pause':
+                    SolarSystemAPI.simulation.pause();
+                    outputLog('⏸️ Simulation paused', 'success');
+                    break;
+                case 'reset':
+                    SolarSystemAPI.simulation.reset();
+                    outputLog('🔄 Simulation reset', 'success');
+                    break;
+                case 'fast':
+                    SolarSystemAPI.simulation.setSpeed(2.0);
+                    outputLog('🚀 Speed set to 2x', 'success');
+                    break;
+                case 'earth':
+                    SolarSystemAPI.camera.setPreset(2);
+                    outputLog('🌍 Camera set to Earth view', 'success');
+                    break;
+                case 'moon':
+                    SolarSystemAPI.camera.setPreset(3);
+                    outputLog('🌙 Camera set to Moon view', 'success');
+                    break;
+                case 'trails':
+                    const state = SolarSystemAPI.visuals.getVisualState();
+                    if (state.trails) {
+                        SolarSystemAPI.visuals.hideTrails();
+                        outputLog('✨ Trails hidden', 'success');
+                    } else {
+                        SolarSystemAPI.visuals.showTrails();
+                        outputLog('✨ Trails shown', 'success');
+                    }
+                    break;
+                case 'negative':
+                    const negState = SolarSystemAPI.visuals.getVisualState();
+                    if (negState.negative) {
+                        SolarSystemAPI.visuals.disableNegativeMode();
+                        outputLog('🌑 Negative mode disabled', 'success');
+                    } else {
+                        SolarSystemAPI.visuals.enableNegativeMode();
+                        outputLog('🌑 Negative mode enabled', 'success');
+                    }
+                    break;
+            }
+        }
+        
+        // Populate examples
+        function populateExamples() {
+            const examples = [
+                {
+                    title: "🎮 Basic Simulation Control",
+                    code: `// Start simulation
+SolarSystemAPI.simulation.start();
+
+// Set speed to 2x
+SolarSystemAPI.simulation.setSpeed(2.0);
+
+// Get current state
+const state = SolarSystemAPI.simulation.getState();
+console.log(state);`
+                },
+                {
+                    title: "📷 Camera Movement",
+                    code: `// Set to Earth close view
+SolarSystemAPI.camera.setPreset(2);
+
+// Enable free camera mode
+SolarSystemAPI.camera.enableFreeMode();
+
+// Enable Follow Earth
+SolarSystemAPI.camera.enableFollowEarth();`
+                },
+                {
+                    title: "🛰️ Satellite Highlighting",
+                    code: `// Highlight LEO communication satellites
+SolarSystemAPI.satellites.highlight('LEO_COMM');
+
+// Get operational satellites
+const operational = SolarSystemAPI.satellites.getOperational();
+console.log('Operational satellites:', operational.length);
+
+// Clear highlighting
+SolarSystemAPI.satellites.unhighlight();`
+                },
+                {
+                    title: "🎨 Visual Effects",
+                    code: `// Show satellite trails
+SolarSystemAPI.visuals.showTrails();
+
+// Hide UI panels
+SolarSystemAPI.visuals.hideUI();
+
+// Enable negative mode
+SolarSystemAPI.visuals.enableNegativeMode();
+
+// Show orbital paths
+SolarSystemAPI.visuals.showOrbits();`
+                },
+                {
+                    title: "🌌 Complete Tour Setup",
+                    code: `// Create a mini tour
+SolarSystemAPI.camera.setPreset(5); // Solar system view
+SolarSystemAPI.simulation.setSpeed(2.0);
+SolarSystemAPI.visuals.showOrbits();
+
+setTimeout(() => {
+    SolarSystemAPI.camera.setPreset(2); // Earth view
+    SolarSystemAPI.satellites.highlight('LEO_COMM');
+}, 3000);
+
+setTimeout(() => {
+    SolarSystemAPI.visuals.showTrails();
+    SolarSystemAPI.camera.setPreset(4); // Satellite view
+}, 6000);`
+                },
+                {
+                    title: "🔧 Advanced API Usage",
+                    code: `// Get system information
+const info = SolarSystemAPI.utils.getSystemInfo();
+console.log('System Info:', info);
+
+// Export configuration
+const config = SolarSystemAPI.utils.exportConfiguration();
+console.log('Current Config:', config);
+
+// Get all celestial bodies
+const earth = SolarSystemAPI.celestialBodies.getEarth();
+const sun = SolarSystemAPI.celestialBodies.getSun();
+console.log('Earth position:', earth.position);`
+                },
+                {
+                    title: "🎯 Satellite Failure Demo",
+                    code: `// Simulate random satellite failure
+SolarSystemAPI.satellites.failRandom();
+
+// Get failed satellites
+const failed = SolarSystemAPI.satellites.getFailed();
+console.log('Failed satellites:', failed.length);
+
+// Highlight military satellites
+SolarSystemAPI.satellites.highlight('MILITARY');`
+                },
+                {
+                    title: "🌍 Earth & Moon Focus",
+                    code: `// Focus on Earth-Moon system
+SolarSystemAPI.camera.setPreset(3); // Moon view
+SolarSystemAPI.camera.enableFollowEarth();
+
+// Show Earth's orbital path
+SolarSystemAPI.visuals.showOrbits();
+
+// Get Earth and Moon data
+const earth = SolarSystemAPI.celestialBodies.getEarth();
+const moon = SolarSystemAPI.celestialBodies.getMoon();
+console.log('Earth-Moon distance:', 
+    Math.sqrt(
+        (earth.position.x - moon.position.x) ** 2 +
+        (earth.position.y - moon.position.y) ** 2 +
+        (earth.position.z - moon.position.z) ** 2
+    ));`
+                }
+            ];
+            
+            const container = document.getElementById('examples');
+            container.innerHTML = '';
+            
+            examples.forEach(example => {
+                const item = document.createElement('div');
+                item.className = 'example-item';
+                item.innerHTML = `
+                    <h4>${example.title}</h4>
+                    <code>${example.code}</code>
+                `;
+                
+                item.addEventListener('click', () => {
+                    document.getElementById('code-input').value = example.code;
+                    outputLog(`📋 Loaded example: ${example.title}`, 'info');
+                });
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeCode();
+                } else if (e.key === 'l') {
+                    e.preventDefault();
+                    clearOutput();
+                }
+            }
+        });
+        
+        // Initial status
+        outputLog('🚀 API Playground initialized', 'info');
+        outputLog('💡 Tip: Use Ctrl+Enter to execute code, Ctrl+L to clear output', 'info');
+    </script>
+</body>
+</html>
